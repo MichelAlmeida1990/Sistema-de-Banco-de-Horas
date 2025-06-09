@@ -1,0 +1,60 @@
+<!-- Seção de Configuração Financeira - CORRIGIDA -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-dollar-sign me-2"></i>
+            Configuração Financeira
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <!-- Campo Valor da Hora -->
+            <div class="col-md-4">
+                <label for="valorHora" class="form-label">
+                    <i class="fas fa-clock me-1"></i>
+                    Valor da Hora (R$) <span class="text-danger">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="valorHora" 
+                    placeholder="50,00"
+                    required
+                >
+            </div>
+
+            <!-- Campo Valor com Bônus - ATUALIZAÇÃO AUTOMÁTICA -->
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="fas fa-calendar-weekend me-1"></i>
+                    Valor com Bônus 90%
+                </label>
+                <div class="form-control bg-light">
+                    <strong id="valorComBonus" class="text-success">R$ 0,00</strong>
+                    <small class="text-muted d-block">por hora fim de semana</small>
+                </div>
+            </div>
+
+            <!-- Botão Salvar -->
+            <div class="col-md-4 d-flex align-items-end">
+                <button 
+                    type="button" 
+                    class="btn btn-primary w-100" 
+                    id="salvarConfiguracao"
+                >
+                    <i class="fas fa-save me-2"></i>
+                    Salvar Configuração
+                </button>
+            </div>
+        </div>
+
+        <!-- ✅ TEXTO EXPLICATIVO CORRIGIDO -->
+        <div class="alert alert-info mt-3 mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Importante:</strong> 
+            O valor da hora será aplicado a todos os cálculos. 
+            Fins de semana recebem bônus de <strong>90% adicional</strong> 
+            (valor base + 90% do valor base).
+        </div>
+    </div>
+</div>

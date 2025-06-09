@@ -1,0 +1,17 @@
+{
+  "name": "banco-de-horas",
+  "version": "1.0.0",
+  "description": "Controle de banco de horas web",
+  "main": "src/js/main.js",
+  "scripts": {
+    "build": "npx @tailwindcss/cli -i ./src/css/styles.css -o ./dist/styles.css --minify",
+    "start": "live-server"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0-alpha.33",
+    "autoprefixer": "^10.4.21",
+    "live-server": "^1.2.2"
+  }
+}

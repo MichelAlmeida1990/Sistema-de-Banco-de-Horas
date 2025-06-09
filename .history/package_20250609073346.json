@@ -1,0 +1,13 @@
+{
+  "name": "banco-de-horas",
+  "version": "1.0.0",
+  "description": "Controle de banco de horas web",
+  "main": "src/js/main.js",
+  "scripts": {
+    "build": "npx tailwindcss -i ./src/css/styles.css -o ./dist/styles.css --minify",
+    "start": "live-server"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {}
+}

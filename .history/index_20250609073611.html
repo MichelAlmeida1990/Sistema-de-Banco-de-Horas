@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banco de Horas</title>
+  <link href="./dist/styles.css" rel="stylesheet">
+</head>
+<body>
+  <header class="bg-blue-700 text-white p-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <img src="./src/assets/logo.png" alt="Logo" class="h-8 w-8 hidden sm:block">
+      <h1 class="text-lg sm:text-2xl font-bold">Banco de Horas</h1>
+    </div>
+  </header>
+  <main class="p-4 max-w-2xl mx-auto w-full">
+    <!-- Formulário de Entrada -->
+    <section class="mb-6 bg-white rounded shadow p-4">
+      <form id="bancoHorasForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="data" class="block text-sm font-medium">Data</label>
+          <input type="date" id="data" name="data" class="mt-1 w-full border rounded p-2" required>
+        </div>
+        <div>
+          <label for="entrada" class="block text-sm font-medium">Entrada</label>
+          <input type="time" id="entrada" name="entrada" class="mt-1 w-full border rounded p-2" required>
+        </div>
+        <div>
+          <label for="saida" class="block text-sm font-medium">Saída</label>
+          <input type="time" id="saida" name="saida" class="mt-1 w-full border rounded p-2" required>
+        </div>
+        <div>
+          <label for="pausa" class="block text-sm font-medium">Pausa (min)</label>
+          <input type="number" id="pausa" name="pausa" class="mt-1 w-full border rounded p-2" min="0" value="60" required>
+        </div>
+        <div>
+          <label for="extras" class="block text-sm font-medium">Horas Extras</label>
+          <input type="number" id="extras" name="extras" class="mt-1 w-full border rounded p-2" min="0" step="0.01">
+        </div>
+        <div class="flex items-center gap-2 mt-6">
+          <input type="checkbox" id="feriado" name="feriado" class="h-4 w-4">
+          <label for="feriado" class="text-sm">Feriado</label>
+          <input type="checkbox" id="fimSemana" name="fimSemana" class="ml-4 h-4 w-4">
+          <label for="fimSemana" class="text-sm">Fim de Semana</label>
+        </div>
+        <div class="sm:col-span-2 flex justify-end mt-2">
+          <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded">Adicionar</button>
+        </div>
+      </form>
+    </section>
+    <!-- Tabela de Exibição -->
+    <section class="mb-6 overflow-x-auto">
+      <table class="min-w-full text-xs sm:text-sm border rounded shadow bg-white" id="bancoHorasTabela">
+        <thead class="bg-blue-100">
+          <tr>
+            <th class="p-2">Data</th>
+            <th class="p-2">Entrada</th>
+            <th class="p-2">Saída</th>
+            <th class="p-2">Pausa</th>
+            <th class="p-2">Tipo</th>
+            <th class="p-2">Trabalhadas</th>
+            <th class="p-2">Extras</th>
+            <th class="p-2 text-blue-700">Bônus 90%</th>
+            <th class="p-2 text-green-700">Saldo</th>
+            <th class="p-2">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Linhas dinâmicas -->
+        </tbody>
+      </table>
+    </section>
+    <!-- Resumo -->
+    <section class="mb-6 bg-gray-50 rounded shadow p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <div class="text-lg font-semibold">Saldo Total: <span id="saldoTotal" class="text-green-700">0h</span></div>
+      <div class="text-lg font-semibold">Bônus 90%: <span id="bonusTotal" class="text-blue-700">0h</span></div>
+    </section>
+    <!-- Botões de Ação -->
+    <section class="flex flex-wrap gap-2 justify-end">
+      <button id="limparBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Limpar</button>
+      <button id="exportarCsvBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Exportar CSV</button>
+      <button id="exportarPdfBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">Exportar PDF</button>
+      <button id="salvarBtn" class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded">Salvar</button>
+    </section>
+  </main>
+  <footer class="bg-blue-700 text-white text-center p-2 mt-8">
+    <small>&copy; 2025 Banco de Horas. Todos os direitos reservados.</small>
+  </footer>
+  <script src="./src/js/main.js"></script>
+</body>
+</html>
