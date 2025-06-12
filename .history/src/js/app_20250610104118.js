@@ -13,7 +13,6 @@ class BancoHorasApp {
         
         // Inicializar
         this.init();
-        window.app = this; // Torna a instância global para uso em funções globais
     }
 
     init() {
@@ -172,7 +171,7 @@ class BancoHorasApp {
         const data = document.getElementById('data')?.value || '';
         const ehFimSemanaAuto = data ? this.calculadora.ehFimDeSemana(data) : false;
         const fimSemanaManual = document.getElementById('fimSemana')?.checked || false;
-        // O campo fimDeSemana será true se o usuário marcar OU se a data for fim de semana
+        
         return {
             data: data,
             entrada: document.getElementById('entrada')?.value || '',
@@ -180,7 +179,7 @@ class BancoHorasApp {
             pausa: parseInt(document.getElementById('pausa')?.value || '0'),
             horasExtras: parseFloat(document.getElementById('horasExtras')?.value || '0'),
             feriado: document.getElementById('feriado')?.checked || false,
-            fimDeSemana: fimSemanaManual || ehFimSemanaAuto, // Prioriza manual, mas considera automático
+            fimDeSemana: ehFimSemanaAuto || fimSemanaManual, // Prioriza detecção automática
             usarBancoHoras: document.getElementById('usarBancoHoras')?.checked || false,
             descricao: document.getElementById('descricao')?.value || ''
         };
@@ -298,7 +297,7 @@ class BancoHorasApp {
                                     title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="excluirRegistro(${registro.id})" 
+                            <button onclick="app.excluirRegistro(${registro.id})" 
                                     class="p-2 text-red-600 hover:bg-red-100 rounded transition-colors" 
                                     title="Excluir">
                                 <i class="fas fa-trash"></i>
@@ -584,48 +583,15 @@ class BancoHorasApp {
         this.mostrarNotificacao('📝 Registro carregado para edição', 'info');
     }
 
-    // ✅ CORREÇÃO - Exclusão mais robusta
+    // ✅ EXCLUIR REGISTRO
     excluirRegistro(id) {
-        try {
-            console.log('🗑️ Tentando excluir registro:', id);
-            
-            // Verificar se o registro existe
-            const registroExiste = this.registros.find(r => r.id === id);
-            if (!registroExiste) {
-                this.mostrarNotificacao('❌ Registro não encontrado', 'error');
-                return;
-            }
-
-            if (!confirm('❓ Tem certeza que deseja excluir este plantão?')) {
-                return;
-            }
-
-            // Salvar estado anterior para possível rollback
-            const registrosAnteriores = [...this.registros];
-            
-            // Remover registro
+        if (confirm('❓ Tem certeza que deseja excluir este plantão?')) {
             this.registros = this.registros.filter(r => r.id !== id);
-            
-            // Salvar com verificação
-            const sucessoSalvar = this.storage.salvarRegistros(this.registros);
-            
-            if (sucessoSalvar) {
-                // Atualizar interface
-                this.renderizarRegistros();
-                this.atualizarTotais();
-                this.atualizarContadores();
-                
-                this.mostrarNotificacao('✅ Plantão excluído com sucesso!', 'success');
-                console.log('✅ Registro excluído:', id);
-            } else {
-                // Rollback em caso de erro
-                this.registros = registrosAnteriores;
-                this.mostrarNotificacao('❌ Erro ao excluir registro', 'error');
-            }
-
-        } catch (error) {
-            console.error('❌ Erro na exclusão:', error);
-            this.mostrarNotificacao('❌ Erro interno ao excluir registro', 'error');
+            this.storage.salvarRegistros(this.registros);
+            this.renderizarRegistros();
+            this.atualizarTotais();
+            this.atualizarContadores();
+            this.mostrarNotificacao('✅ Plantão excluído com sucesso!', 'success');
         }
     }
 
@@ -738,143 +704,61 @@ class BancoHorasApp {
     }
 }
 
-// ✅ CORREÇÃO - Inicialização mais robusta
-let app = null;
-let tentativasInicializacao = 0;
-const MAX_TENTATIVAS = 3;
+// ✅ INICIALIZAR APLICAÇÃO
+let app;
 
+// Função de inicialização segura
 function inicializarApp() {
     try {
-        // Evitar múltiplas inicializações
-        if (app) {
-            console.log('🎯 App já inicializado');
-            return;
-        }
-
-        tentativasInicializacao++;
-        console.log(`🚀 Tentativa ${tentativasInicializacao} de inicialização...`);
-
-        // Verificar se elementos essenciais existem
-        const elementosEssenciais = [
-            'bancoHorasForm',
-            'tabelaBody',
-            'valorHora'
-        ];
-
-        const elementosFaltando = elementosEssenciais.filter(id => !document.getElementById(id));
-        
-        if (elementosFaltando.length > 0) {
-            throw new Error(`Elementos não encontrados: ${elementosFaltando.join(', ')}`);
-        }
-
-        // Limpar storage cache antes de inicializar
-        if (window.localStorage) {
-            console.log('🧹 Limpando cache do storage...');
-        }
-
         app = new BancoHorasApp();
-        
-        // Verificar se inicializou corretamente
-        if (app && app.storage && app.calculadora) {
-            console.log('✅ App inicializado com sucesso!');
-            
-            // Forçar atualização da interface
-            setTimeout(() => {
-                app.renderizarRegistros();
-                app.atualizarTotais();
-                app.atualizarContadores();
-            }, 100);
-            
-        } else {
-            throw new Error('Componentes da app não inicializados corretamente');
-        }
-
+        console.log('🚀 App inicializado com sucesso!');
     } catch (error) {
-        console.error(`❌ Erro na inicialização (tentativa ${tentativasInicializacao}):`, error);
+        console.error('❌ Erro crítico na inicialização:', error);
         
-        if (tentativasInicializacao < MAX_TENTATIVAS) {
-            console.log('🔄 Tentando novamente em 1 segundo...');
-            setTimeout(inicializarApp, 1000);
-        } else {
-            console.error('❌ Falha crítica na inicialização após 3 tentativas');
-            mostrarErroInicializacao();
-        }
-    }
-}
-
-function mostrarErroInicializacao() {
-    const container = document.body;
-    if (container) {
-        container.innerHTML = `
-            <div class="min-h-screen bg-red-50 flex items-center justify-center p-4">
+        // Fallback de emergência
+        document.body.innerHTML = `
+            <div class="min-h-screen bg-red-50 flex items-center justify-center">
                 <div class="bg-white p-8 rounded-lg shadow-lg max-w-md text-center">
                     <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
                     <h2 class="text-xl font-bold text-red-700 mb-2">Erro de Inicialização</h2>
-                    <p class="text-gray-600 mb-4">Não foi possível carregar a aplicação.</p>
-                    <div class="space-y-2">
-                        <button onclick="location.reload()" 
-                                class="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                            🔄 Recarregar Página
-                        </button>
-                        <button onclick="localStorage.clear(); location.reload()" 
-                                class="w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-                            🧹 Limpar Cache e Recarregar
-                        </button>
-                    </div>
+                    <p class="text-gray-600 mb-4">Ocorreu um erro ao carregar a aplicação.</p>
+                    <button onclick="location.reload()" 
+                            class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                        Recarregar Página
+                    </button>
                 </div>
             </div>
         `;
     }
 }
 
-// ✅ CORREÇÃO - Funções globais mais robustas
+// Múltiplas formas de inicialização para garantir compatibilidade
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inicializarApp);
+} else {
+    inicializarApp();
+}
+
+// Fallback adicional
+window.addEventListener('load', () => {
+    if (!app) {
+        console.warn('⚠️ App não inicializado, tentando novamente...');
+        inicializarApp();
+    }
+});
+
+// ✅ FUNÇÕES GLOBAIS PARA COMPATIBILIDADE
 window.editarRegistro = function(id) {
-    try {
-        if (!app) {
-            console.error('❌ App não inicializada para edição');
-            return;
-        }
+    if (app) {
         app.editarRegistro(id);
-    } catch (error) {
-        console.error('❌ Erro na edição:', error);
     }
 };
 
 window.excluirRegistro = function(id) {
-    try {
-        if (!app) {
-            console.error('❌ App não inicializada para exclusão');
-            alert('Sistema ainda não foi carregado. Aguarde um momento e tente novamente.');
-            return;
-        }
+    if (app) {
         app.excluirRegistro(id);
-    } catch (error) {
-        console.error('❌ Erro na exclusão:', error);
-        alert('Erro ao excluir registro. Tente recarregar a página.');
     }
 };
-
-// ✅ NOVO - Função para verificar se app está pronta
-window.verificarApp = function() {
-    if (app && app.storage && app.calculadora) {
-        console.log('✅ App está funcionando corretamente');
-        return true;
-    } else {
-        console.log('❌ App não está inicializada corretamente');
-        return false;
-    }
-};
-
-// Garante que o app só inicializa após o DOM estar pronto
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    inicializarApp();
-    window.app = app;
-  });
-} else {
-  inicializarApp();
-  window.app = app;
-}
 
 console.log('🚀 App principal com banco de horas CORRIGIDO - v5.0.0');
 console.log('✅ Bônus fim de semana: 190% do valor base (100% + 90% bônus)');
@@ -882,4 +766,3 @@ console.log('✅ Detecção automática de fim de semana implementada');
 console.log('✅ Sistema de notificações melhorado');
 console.log('✅ Compatibilidade com múltiplos navegadores');
 console.log('✅ Interface moderna e responsiva com Tailwind CSS');
-console.log('✅ Banco de Horas App pronto para uso!');

@@ -13,7 +13,6 @@ class BancoHorasApp {
         
         // Inicializar
         this.init();
-        window.app = this; // Torna a instância global para uso em funções globais
     }
 
     init() {
@@ -172,7 +171,7 @@ class BancoHorasApp {
         const data = document.getElementById('data')?.value || '';
         const ehFimSemanaAuto = data ? this.calculadora.ehFimDeSemana(data) : false;
         const fimSemanaManual = document.getElementById('fimSemana')?.checked || false;
-        // O campo fimDeSemana será true se o usuário marcar OU se a data for fim de semana
+        
         return {
             data: data,
             entrada: document.getElementById('entrada')?.value || '',
@@ -180,7 +179,7 @@ class BancoHorasApp {
             pausa: parseInt(document.getElementById('pausa')?.value || '0'),
             horasExtras: parseFloat(document.getElementById('horasExtras')?.value || '0'),
             feriado: document.getElementById('feriado')?.checked || false,
-            fimDeSemana: fimSemanaManual || ehFimSemanaAuto, // Prioriza manual, mas considera automático
+            fimDeSemana: ehFimSemanaAuto || fimSemanaManual, // Prioriza detecção automática
             usarBancoHoras: document.getElementById('usarBancoHoras')?.checked || false,
             descricao: document.getElementById('descricao')?.value || ''
         };
@@ -298,7 +297,7 @@ class BancoHorasApp {
                                     title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="excluirRegistro(${registro.id})" 
+                            <button onclick="app.excluirRegistro(${registro.id})" 
                                     class="p-2 text-red-600 hover:bg-red-100 rounded transition-colors" 
                                     title="Excluir">
                                 <i class="fas fa-trash"></i>
@@ -607,7 +606,7 @@ class BancoHorasApp {
             this.registros = this.registros.filter(r => r.id !== id);
             
             // Salvar com verificação
-            const sucessoSalvar = this.storage.salvarRegistros(this.registros);
+            const sucessoSalvar = this.storage.salvarRegistrosComVerificacao(this.registros);
             
             if (sucessoSalvar) {
                 // Atualizar interface
@@ -868,12 +867,10 @@ window.verificarApp = function() {
 // Garante que o app só inicializa após o DOM estar pronto
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    inicializarApp();
-    window.app = app;
+    window.app = new BancoHorasApp();
   });
 } else {
-  inicializarApp();
-  window.app = app;
+  window.app = new BancoHorasApp();
 }
 
 console.log('🚀 App principal com banco de horas CORRIGIDO - v5.0.0');

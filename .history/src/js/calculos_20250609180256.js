@@ -1,24 +1,22 @@
-// src/js/calculos.js - Sistema de Cálculos com Banco de Horas v5.0.0
+// src/js/calculos.js - Sistema de Cálculos com Banco de Horas v4.0.0
 class CalculadoraBancoHoras {
     constructor() {
-        console.log('🧮 Calculadora de Banco de Horas inicializada - v5.0.0');
-        this.JORNADA_PADRAO = 10; // 10 horas padrão (09:00-19:00)
-        this.HORARIO_ENTRADA_PADRAO = '09:00';
-        this.HORARIO_SAIDA_PADRAO = '19:00';
-        this.BONUS_FIM_SEMANA = 1.90; // 190% do valor (100% + 90% bônus)
-        this.VALOR_HORA_BASE = 25.00;
+        console.log('🧮 Calculadora de Banco de Horas inicializada - v4.0.0');
+        this.JORNADA_PADRAO = 8; // 8 horas padrão
+        this.BONUS_FIM_SEMANA = 0.90; // 90% de bônus
     }
 
-    // ✅ CORRIGIDO - Calcular valor com bônus de 90% para fim de semana
+    // ✅ CORRETO - Calcular valor com bônus de 90% para fim de semana
     calcularValorHora(valorBase, ehFimDeSemana, ehFeriado) {
         try {
             if (ehFimDeSemana || ehFeriado) {
-                // Valor final = Valor base × 1.90 (100% + 90% bônus)
-                const valorFinal = valorBase * this.BONUS_FIM_SEMANA;
+                // Bônus de 90% sobre o valor base
+                const bonus = valorBase * this.BONUS_FIM_SEMANA;
+                const valorFinal = valorBase + bonus;
                 
                 console.log(`💰 Fim de semana/Feriado detectado:
                     - Valor base: R$ ${valorBase.toFixed(2)}
-                    - Multiplicador: ${this.BONUS_FIM_SEMANA} (100% + 90% bônus)
+                    - Bônus 90%: R$ ${bonus.toFixed(2)}
                     - Valor final: R$ ${valorFinal.toFixed(2)}`);
                 
                 return valorFinal;
@@ -29,186 +27,6 @@ class CalculadoraBancoHoras {
         } catch (error) {
             console.error('❌ Erro no cálculo de valor/hora:', error);
             return valorBase;
-        }
-    }
-
-    // ✅ CORRIGIDO - Calcular valor individual do registro com banco de horas
-    calcularValorRegistro(registro, valorHoraPadrao = 25.00) {
-        try {
-            // 1. Calcular horas trabalhadas
-            const horasTrabalhadas = this.calcularHorasTrabalhadas(
-                registro.entrada, 
-                registro.saida, 
-                registro.pausa || 0
-            );
-
-            // 2. Determinar se tem bônus
-            // Considera tanto o campo do formulário quanto o cálculo automático
-            const ehFimDeSemana = registro.fimDeSemana === true || this.ehFimDeSemana(registro.data);
-            const ehFeriado = registro.feriado || false;
-            const temBonus = ehFimDeSemana || ehFeriado;
-
-            // 3. Calcular saldo (diferença da jornada padrão)
-            const saldoHoras = horasTrabalhadas - this.JORNADA_PADRAO;
-
-            // 4. Sistema de banco de horas
-            let horasExtrasRemuneradas = 0;
-            let bancoHoras = 0;
-            let horasNormaisParaPagamento = Math.min(horasTrabalhadas, this.JORNADA_PADRAO);
-
-            // Se trabalhou mais que a jornada padrão
-            if (saldoHoras > 0) {
-                if (registro.usarBancoHoras) {
-                    // Vai para banco de horas (não remunerado)
-                    bancoHoras = saldoHoras;
-                    horasExtrasRemuneradas = 0;
-                } else {
-                    // Horas extras remuneradas
-                    horasExtrasRemuneradas = saldoHoras;
-                    bancoHoras = 0;
-                }
-            }
-
-            // 5. Adicionar horas extras manuais (sempre remuneradas)
-            if (registro.horasExtras && registro.horasExtras > 0) {
-                horasExtrasRemuneradas += parseFloat(registro.horasExtras);
-            }
-
-            // 6. Calcular valores
-            const valorHora = this.calcularValorHora(valorHoraPadrao, temBonus, ehFeriado);
-            let valorTotal, valorHorasNormais, valorHorasExtras;
-            if (temBonus) {
-                // Todas as horas recebem bônus
-                valorTotal = horasTrabalhadas * valorHora;
-                valorHorasNormais = horasTrabalhadas * valorHora;
-                valorHorasExtras = 0;
-            } else {
-                // Horas normais e extras separadas
-                valorHorasNormais = horasNormaisParaPagamento * valorHora;
-                valorHorasExtras = horasExtrasRemuneradas * valorHora;
-                valorTotal = valorHorasNormais + valorHorasExtras;
-            }
-
-            const resultado = {
-                horasTrabalhadas: Math.round(horasTrabalhadas * 100) / 100,
-                saldoHoras: Math.round(saldoHoras * 100) / 100,
-                horasExtrasRemuneradas: Math.round(horasExtrasRemuneradas * 100) / 100,
-                bancoHoras: Math.round(bancoHoras * 100) / 100,
-                valorHora: Math.round(valorHora * 100) / 100,
-                valorHorasNormais: Math.round(valorHorasNormais * 100) / 100,
-                valorHorasExtras: Math.round(valorHorasExtras * 100) / 100,
-                valorTotal: Math.round(valorTotal * 100) / 100,
-                ehFimDeSemana: ehFimDeSemana,
-                ehFeriado: ehFeriado,
-                temBonus: temBonus,
-                tipoBonus: ehFeriado ? 'Feriado' : (ehFimDeSemana ? 'Fim de Semana' : 'Normal'),
-                valorBase: valorHoraPadrao,
-                bonusAplicado: temBonus ? (valorHora - valorHoraPadrao) : 0,
-                multiplicadorBonus: temBonus ? this.BONUS_FIM_SEMANA : 1.0
-            };
-
-            console.log(`📊 Cálculo registro ${registro.data}:`, resultado);
-            return resultado;
-
-        } catch (error) {
-            console.error('❌ Erro ao calcular valor do registro:', error);
-            return {
-                horasTrabalhadas: 0,
-                saldoHoras: 0,
-                horasExtrasRemuneradas: 0,
-                bancoHoras: 0,
-                valorHora: valorHoraPadrao,
-                valorHorasNormais: 0,
-                valorHorasExtras: 0,
-                valorTotal: 0,
-                ehFimDeSemana: false,
-                ehFeriado: false,
-                temBonus: false,
-                tipoBonus: 'Normal',
-                valorBase: valorHoraPadrao,
-                bonusAplicado: 0,
-                multiplicadorBonus: 1.0
-            };
-        }
-    }
-
-    // ✅ NOVO - Verificar se está no horário padrão
-    estaNoHorarioPadrao(entrada, saida) {
-        try {
-            // Se não informado, assume horário padrão
-            if (!entrada || !saida) {
-                return {
-                    entrada: this.HORARIO_ENTRADA_PADRAO,
-                    saida: this.HORARIO_SAIDA_PADRAO,
-                    ehPadrao: true
-                };
-            }
-
-            const ehPadrao = (entrada === this.HORARIO_ENTRADA_PADRAO && 
-                             saida === this.HORARIO_SAIDA_PADRAO);
-
-            return {
-                entrada: entrada,
-                saida: saida,
-                ehPadrao: ehPadrao
-            };
-
-        } catch (error) {
-            console.error('❌ Erro ao verificar horário padrão:', error);
-            return {
-                entrada: this.HORARIO_ENTRADA_PADRAO,
-                saida: this.HORARIO_SAIDA_PADRAO,
-                ehPadrao: true
-            };
-        }
-    }
-
-    // ✅ Calcular horas trabalhadas (mantido original)
-    calcularHorasTrabalhadas(entrada, saida, pausaMinutos = 0) {
-        try {
-            if (!entrada || !saida) {
-                throw new Error('Horários de entrada e saída são obrigatórios');
-            }
-
-            const [horaEntrada, minutoEntrada] = entrada.split(':').map(Number);
-            const [horaSaida, minutoSaida] = saida.split(':').map(Number);
-
-            if (isNaN(horaEntrada) || isNaN(minutoEntrada) || isNaN(horaSaida) || isNaN(minutoSaida)) {
-                throw new Error('Formato de horário inválido');
-            }
-
-            let minutosEntrada = horaEntrada * 60 + minutoEntrada;
-            let minutosSaida = horaSaida * 60 + minutoSaida;
-
-            // Se saída for menor que entrada, assumir que passou para o próximo dia
-            if (minutosSaida < minutosEntrada) {
-                minutosSaida += 24 * 60; // Adicionar 24 horas
-            }
-
-            const minutosTrabalhados = minutosSaida - minutosEntrada - (pausaMinutos || 0);
-            const horasTrabalhadas = minutosTrabalhados / 60;
-
-            if (horasTrabalhadas < 0) {
-                throw new Error('Horas trabalhadas não podem ser negativas');
-            }
-
-            return Math.round(horasTrabalhadas * 100) / 100;
-
-        } catch (error) {
-            console.error('❌ Erro ao calcular horas trabalhadas:', error);
-            throw error;
-        }
-    }
-
-    // ✅ Verificar se é fim de semana (mantido original)
-    ehFimDeSemana(data) {
-        try {
-            const dataObj = new Date(data + 'T00:00:00');
-            const diaSemana = dataObj.getDay();
-            return diaSemana === 0 || diaSemana === 6; // 0 = Domingo, 6 = Sábado
-        } catch (error) {
-            console.error('❌ Erro ao verificar fim de semana:', error);
-            return false;
         }
     }
 
@@ -276,8 +94,141 @@ class CalculadoraBancoHoras {
         }
     }
 
+    // ✅ CORRIGIDO - Calcular valor individual do registro com banco de horas
+    calcularValorRegistro(registro, valorHoraPadrao = 25.00) {
+        try {
+            // 1. Calcular horas trabalhadas
+            const horasTrabalhadas = this.calcularHorasTrabalhadas(
+                registro.entrada, 
+                registro.saida, 
+                registro.pausa || 0
+            );
+
+            // 2. Determinar se tem bônus
+            const ehFimDeSemana = this.ehFimDeSemana(registro.data);
+            const ehFeriado = registro.feriado || false;
+            const temBonus = ehFimDeSemana || ehFeriado;
+
+            // 3. Calcular saldo (diferença da jornada padrão)
+            const saldoHoras = horasTrabalhadas - this.JORNADA_PADRAO;
+
+            // 4. Determinar horas extras e banco de horas
+            let horasExtrasRemuneradas = 0;
+            let bancoHoras = 0;
+
+            // Se marcou "usar banco de horas", não remunera as extras
+            if (registro.usarBancoHoras && saldoHoras > 0) {
+                bancoHoras = saldoHoras;
+                horasExtrasRemuneradas = 0;
+            } else if (saldoHoras > 0) {
+                horasExtrasRemuneradas = saldoHoras;
+                bancoHoras = 0;
+            }
+
+            // 5. Adicionar horas extras manuais (sempre remuneradas)
+            if (registro.horasExtras && registro.horasExtras > 0) {
+                horasExtrasRemuneradas += parseFloat(registro.horasExtras);
+            }
+
+            // 6. Calcular valores
+            const valorHora = this.calcularValorHora(valorHoraPadrao, temBonus, ehFeriado);
+            const horasNormaisParaPagamento = Math.min(horasTrabalhadas, this.JORNADA_PADRAO);
+            const valorHorasNormais = horasNormaisParaPagamento * valorHora;
+            const valorHorasExtras = horasExtrasRemuneradas * valorHora;
+            const valorTotal = valorHorasNormais + valorHorasExtras;
+
+            const resultado = {
+                horasTrabalhadas: Math.round(horasTrabalhadas * 100) / 100,
+                saldoHoras: Math.round(saldoHoras * 100) / 100,
+                horasExtrasRemuneradas: Math.round(horasExtrasRemuneradas * 100) / 100,
+                bancoHoras: Math.round(bancoHoras * 100) / 100,
+                valorHora: Math.round(valorHora * 100) / 100,
+                valorHorasNormais: Math.round(valorHorasNormais * 100) / 100,
+                valorHorasExtras: Math.round(valorHorasExtras * 100) / 100,
+                valorTotal: Math.round(valorTotal * 100) / 100,
+                ehFimDeSemana: ehFimDeSemana,
+                ehFeriado: ehFeriado,
+                temBonus: temBonus,
+                tipoBonus: ehFeriado ? 'Feriado' : (ehFimDeSemana ? 'Fim de Semana' : 'Normal'),
+                valorBase: valorHoraPadrao,
+                bonusAplicado: temBonus ? valorHoraPadrao * this.BONUS_FIM_SEMANA : 0
+            };
+
+            console.log(`📊 Cálculo registro ${registro.data}:`, resultado);
+            return resultado;
+
+        } catch (error) {
+            console.error('❌ Erro ao calcular valor do registro:', error);
+            return {
+                horasTrabalhadas: 0,
+                saldoHoras: 0,
+                horasExtrasRemuneradas: 0,
+                bancoHoras: 0,
+                valorHora: valorHoraPadrao,
+                valorHorasNormais: 0,
+                valorHorasExtras: 0,
+                valorTotal: 0,
+                ehFimDeSemana: false,
+                ehFeriado: false,
+                temBonus: false,
+                tipoBonus: 'Normal',
+                valorBase: valorHoraPadrao,
+                bonusAplicado: 0
+            };
+        }
+    }
+
+    // ✅ Calcular horas trabalhadas (mantido original)
+    calcularHorasTrabalhadas(entrada, saida, pausaMinutos = 0) {
+        try {
+            if (!entrada || !saida) {
+                throw new Error('Horários de entrada e saída são obrigatórios');
+            }
+
+            const [horaEntrada, minutoEntrada] = entrada.split(':').map(Number);
+            const [horaSaida, minutoSaida] = saida.split(':').map(Number);
+
+            if (isNaN(horaEntrada) || isNaN(minutoEntrada) || isNaN(horaSaida) || isNaN(minutoSaida)) {
+                throw new Error('Formato de horário inválido');
+            }
+
+            let minutosEntrada = horaEntrada * 60 + minutoEntrada;
+            let minutosSaida = horaSaida * 60 + minutoSaida;
+
+            // Se saída for menor que entrada, assumir que passou para o próximo dia
+            if (minutosSaida < minutosEntrada) {
+                minutosSaida += 24 * 60; // Adicionar 24 horas
+            }
+
+            const minutosTrabalhados = minutosSaida - minutosEntrada - (pausaMinutos || 0);
+            const horasTrabalhadas = minutosTrabalhados / 60;
+
+            if (horasTrabalhadas < 0) {
+                throw new Error('Horas trabalhadas não podem ser negativas');
+            }
+
+            return Math.round(horasTrabalhadas * 100) / 100;
+
+        } catch (error) {
+            console.error('❌ Erro ao calcular horas trabalhadas:', error);
+            throw error;
+        }
+    }
+
+    // ✅ Verificar se é fim de semana (mantido original)
+    ehFimDeSemana(data) {
+        try {
+            const dataObj = new Date(data + 'T00:00:00');
+            const diaSemana = dataObj.getDay();
+            return diaSemana === 0 || diaSemana === 6; // 0 = Domingo, 6 = Sábado
+        } catch (error) {
+            console.error('❌ Erro ao verificar fim de semana:', error);
+            return false;
+        }
+    }
+
     // ✅ CORRIGIDO - Calcular saldo do banco de horas
-    calcularSaldoBanco(registros, horasPadraoPorDia = 10) {
+    calcularSaldoBanco(registros, horasPadraoPorDia = 8) {
         try {
             let saldoTotal = 0;
             let saldoRemunerado = 0;
@@ -455,26 +406,24 @@ class CalculadoraBancoHoras {
         };
     }
 
-    // ✅ CORRIGIDO - Demonstrar cálculo de bônus
+    // ✅ NOVO - Demonstrar cálculo de bônus (mantido original)
     demonstrarCalculoBonus(valorBase) {
-        const valorComBonus = valorBase * this.BONUS_FIM_SEMANA;
-        const bonusEmReais = valorComBonus - valorBase;
+        const bonus = valorBase * this.BONUS_FIM_SEMANA;
+        const valorFinal = valorBase + bonus;
         
         console.log(`📊 DEMONSTRAÇÃO DE CÁLCULO DE BÔNUS FIM DE SEMANA:
             💰 Valor base: R$ ${valorBase.toFixed(2)}
-            📈 Multiplicador: ${this.BONUS_FIM_SEMANA} (100% + 90% bônus)
-            💵 Valor final por hora: R$ ${valorComBonus.toFixed(2)}
-            🎯 Bônus em R$: R$ ${bonusEmReais.toFixed(2)}
+            📈 Bônus (90% do valor base): R$ ${bonus.toFixed(2)}
+            💵 Valor final por hora: R$ ${valorFinal.toFixed(2)}
             
             📝 Exemplo com 11 horas fim de semana:
-            🔢 11h × R$ ${valorComBonus.toFixed(2)} = R$ ${(11 * valorComBonus).toFixed(2)}`);
+            🔢 11h × R$ ${valorFinal.toFixed(2)} = R$ ${(11 * valorFinal).toFixed(2)}`);
         
         return {
             valorBase: valorBase,
-            multiplicador: this.BONUS_FIM_SEMANA,
-            bonusEmReais: bonusEmReais,
-            valorFinal: valorComBonus,
-            exemplo11h: 11 * valorComBonus
+            bonus: bonus,
+            valorFinal: valorFinal,
+            exemplo11h: 11 * valorFinal
         };
     }
 
@@ -491,18 +440,6 @@ class CalculadoraBancoHoras {
             currency: 'BRL'
         }).format(valor);
     }
-
-    // ✅ NOVO - Informações do sistema
-    obterInfoSistema() {
-        return {
-            versao: 'v5.0.0',
-            jornadaPadrao: this.JORNADA_PADRAO,
-            horarioPadrao: `${this.HORARIO_ENTRADA_PADRAO} às ${this.HORARIO_SAIDA_PADRAO}`,
-            bonusFimSemana: `${((this.BONUS_FIM_SEMANA - 1) * 100).toFixed(0)}%`,
-            valorHoraBase: this.VALOR_HORA_BASE,
-            valorHoraComBonus: this.calcularValorHora(this.VALOR_HORA_BASE, true, false)
-        };
-    }
 }
 
 // ✅ Exportar classe
@@ -510,7 +447,4 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = CalculadoraBancoHoras;
 }
 
-console.log('🧮 Calculadora com banco de horas CORRIGIDA - v5.0.0');
-console.log('✅ Bônus fim de semana: R$ 25,00 × 1.90 = R$ 47,50');
-console.log('✅ Horário padrão: Segunda a Sexta, 09:00 às 19:00 (10h)');
-console.log('✅ Sistema de banco de horas implementado');
+console.log('🧮 Calculadora com banco de horas corrigida - v4.0.0');

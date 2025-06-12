@@ -1,7 +1,7 @@
-// src/js/app.js - Aplicação Principal com Banco de Horas v5.0.0
+// src/js/app.js - Aplicação Principal com Banco de Horas v4.1.0
 class BancoHorasApp {
     constructor() {
-        console.log('🚀 Banco de Horas App iniciando - v5.0.0');
+        console.log('🚀 Banco de Horas App iniciando - v4.1.0');
         
         // Inicializar componentes
         this.storage = new GerenciadorStorage();
@@ -13,7 +13,6 @@ class BancoHorasApp {
         
         // Inicializar
         this.init();
-        window.app = this; // Torna a instância global para uso em funções globais
     }
 
     init() {
@@ -38,9 +37,6 @@ class BancoHorasApp {
             this.renderizarRegistros();
             this.atualizarTotais();
             this.atualizarContadores();
-            
-            // Mostrar informações do sistema
-            this.mostrarInfoSistema();
             
             console.log('✅ Aplicação inicializada com sucesso!');
             
@@ -96,8 +92,7 @@ class BancoHorasApp {
             limparBtn: () => this.limparTodosDados(),
             exportarCsvBtn: () => this.exportarCSV(),
             exportarPdfBtn: () => this.exportarPDF(),
-            salvarBtn: () => this.salvarDados(),
-            demonstrarBonusBtn: () => this.demonstrarCalculoBonus()
+            salvarBtn: () => this.salvarDados()
         };
 
         Object.entries(botoes).forEach(([id, funcao]) => {
@@ -115,13 +110,9 @@ class BancoHorasApp {
         const ehFimSemana = this.calculadora.ehFimDeSemana(data);
         const checkboxFimSemana = document.getElementById('fimSemana');
         
-        if (checkboxFimSemana) {
-            checkboxFimSemana.checked = ehFimSemana;
-            
-            if (ehFimSemana) {
-                console.log('🎯 Fim de semana detectado automaticamente');
-                this.mostrarNotificacao('🎯 Fim de semana detectado! Bônus de 90% será aplicado.', 'info');
-            }
+        if (checkboxFimSemana && ehFimSemana) {
+            checkboxFimSemana.checked = true;
+            console.log('🎯 Fim de semana detectado automaticamente');
         }
     }
 
@@ -133,7 +124,7 @@ class BancoHorasApp {
             // Validar dados
             const validacao = this.calculadora.validarRegistro(dados);
             if (!validacao.valido) {
-                this.mostrarNotificacao('❌ Erro nos dados:\n' + validacao.erros.join('\n'), 'error');
+                alert('❌ Erro nos dados:\n' + validacao.erros.join('\n'));
                 return;
             }
 
@@ -163,26 +154,22 @@ class BancoHorasApp {
 
         } catch (error) {
             console.error('❌ Erro ao salvar registro:', error);
-            this.mostrarNotificacao('❌ Erro ao salvar registro: ' + error.message, 'error');
+            alert('❌ Erro ao salvar registro: ' + error.message);
         }
     }
 
-    // ✅ CORRIGIDO - Coletar dados do formulário com detecção automática de fim de semana
+    // ✅ CORRIGIDO - Coletar dados do formulário com IDs corretos
     coletarDadosFormulario() {
-        const data = document.getElementById('data')?.value || '';
-        const ehFimSemanaAuto = data ? this.calculadora.ehFimDeSemana(data) : false;
-        const fimSemanaManual = document.getElementById('fimSemana')?.checked || false;
-        // O campo fimDeSemana será true se o usuário marcar OU se a data for fim de semana
         return {
-            data: data,
+            data: document.getElementById('data')?.value || '',
             entrada: document.getElementById('entrada')?.value || '',
             saida: document.getElementById('saida')?.value || '',
             pausa: parseInt(document.getElementById('pausa')?.value || '0'),
             horasExtras: parseFloat(document.getElementById('horasExtras')?.value || '0'),
             feriado: document.getElementById('feriado')?.checked || false,
-            fimDeSemana: fimSemanaManual || ehFimSemanaAuto, // Prioriza manual, mas considera automático
+            fimDeSemana: document.getElementById('fimSemana')?.checked || false,
             usarBancoHoras: document.getElementById('usarBancoHoras')?.checked || false,
-            descricao: document.getElementById('descricao')?.value || ''
+            descricao: ''
         };
     }
 
@@ -201,12 +188,6 @@ class BancoHorasApp {
                         <i class="fas fa-info-circle text-4xl mb-3 block"></i>
                         <p class="text-lg">Nenhum plantão registrado ainda.</p>
                         <p class="text-sm">Adicione seu primeiro plantão usando o formulário acima.</p>
-                        <div class="mt-4 p-4 bg-blue-50 rounded-lg">
-                            <p class="text-sm text-blue-700">
-                                <i class="fas fa-lightbulb mr-1"></i>
-                                <strong>Dica:</strong> Plantões de fim de semana recebem bônus de 90%!
-                            </p>
-                        </div>
                     </td>
                 </tr>
             `;
@@ -282,7 +263,7 @@ class BancoHorasApp {
                     <td class="p-4 text-center">
                         ${calculo.temBonus ? 
                             `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <i class="fas fa-gift mr-1"></i>+90%
+                                <i class="fas fa-gift mr-1"></i>Bônus
                             </span>` : 
                             '<span class="text-gray-400">-</span>'
                         }
@@ -298,7 +279,7 @@ class BancoHorasApp {
                                     title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="excluirRegistro(${registro.id})" 
+                            <button onclick="app.excluirRegistro(${registro.id})" 
                                     class="p-2 text-red-600 hover:bg-red-100 rounded transition-colors" 
                                     title="Excluir">
                                 <i class="fas fa-trash"></i>
@@ -343,17 +324,13 @@ class BancoHorasApp {
         const valorHora = this.obterValorHora();
         const totais = this.calculadora.calcularTotais(this.registros, valorHora);
         const saldoBanco = this.calculadora.calcularSaldoBanco(this.registros);
-        const estatisticas = this.calculadora.obterEstatisticas(this.registros);
 
         // Atualizar cards do topo
         const elementos = {
             'saldoTotalCard': `${saldoBanco.saldoTotal.toFixed(1)}h`,
             'bonusTotalCard': `${totais.totalHorasFimSemana.toFixed(1)}h`,
             'totalPlantoes': this.registros.length.toString(),
-            'valorTotalCard': `R$ ${totais.totalValorGeral.toFixed(2)}`,
-            'plantoesNormais': estatisticas.plantoesNormais.toString(),
-            'plantoesFimSemana': estatisticas.plantoesFimSemana.toString(),
-            'plantoesFeriado': estatisticas.plantoesFeriado.toString()
+            'valorTotalCard': `R$ ${totais.totalValorGeral.toFixed(2)}`
         };
 
         Object.entries(elementos).forEach(([id, valor]) => {
@@ -366,83 +343,17 @@ class BancoHorasApp {
         console.log('🎯 Contadores atualizados:', elementos);
     }
 
-    // ✅ CORRIGIDO - Atualizar valor com bônus usando a calculadora
+    // ✅ CORRIGIDO - Atualizar valor com bônus (valor base + 90%)
     atualizarValorComBonus() {
         const valorBase = parseFloat(document.getElementById('valorHora')?.value || '25');
         
-        // ✅ CORREÇÃO: Usar a calculadora para obter o valor correto
-        const valorComBonus = this.calculadora.calcularValorHora(valorBase, true, false);
+        // ✅ CORREÇÃO: valor base + 90% do valor base = valor base * 1.9
+        const valorComBonus = valorBase + (valorBase * 0.9);
         
         const elemento = document.getElementById('valorComBonus');
         if (elemento) {
             elemento.textContent = `R$ ${valorComBonus.toFixed(2)}`;
         }
-
-        // Atualizar demonstração
-        this.atualizarDemonstracao(valorBase, valorComBonus);
-    }
-
-    // ✅ NOVO - Atualizar demonstração de cálculo
-    atualizarDemonstracao(valorBase, valorComBonus) {
-        const elementos = {
-            'demoValorBase': `R$ ${valorBase.toFixed(2)}`,
-            'demoMultiplicador': '1.90',
-            'demoValorFinal': `R$ ${valorComBonus.toFixed(2)}`,
-            'demoExemplo': `11h × R$ ${valorComBonus.toFixed(2)} = R$ ${(11 * valorComBonus).toFixed(2)}`
-        };
-
-        Object.entries(elementos).forEach(([id, valor]) => {
-            const elemento = document.getElementById(id);
-            if (elemento) {
-                elemento.textContent = valor;
-            }
-        });
-    }
-
-    // ✅ NOVO - Demonstrar cálculo de bônus
-    demonstrarCalculoBonus() {
-        const valorBase = this.obterValorHora();
-        const demonstracao = this.calculadora.demonstrarCalculoBonus(valorBase);
-        
-        const modal = `
-            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                    <h3 class="text-lg font-bold mb-4">📊 Demonstração de Cálculo</h3>
-                    <div class="space-y-3">
-                        <div class="flex justify-between">
-                            <span>Valor base:</span>
-                            <span class="font-semibold">R$ ${demonstracao.valorBase.toFixed(2)}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Multiplicador:</span>
-                            <span class="font-semibold">${demonstracao.multiplicador}</span>
-                        </div>
-                        <div class="flex justify-between border-t pt-2">
-                            <span>Valor final:</span>
-                            <span class="font-bold text-green-600">R$ ${demonstracao.valorFinal.toFixed(2)}</span>
-                        </div>
-                        <div class="bg-blue-50 p-3 rounded">
-                            <p class="text-sm text-blue-700">
-                                <strong>Exemplo:</strong> 11h × R$ ${demonstracao.valorFinal.toFixed(2)} = 
-                                <strong>R$ ${demonstracao.exemplo11h.toFixed(2)}</strong>
-                            </p>
-                        </div>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" 
-                            class="mt-4 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-                        Fechar
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', modal);
-    }
-
-    // ✅ NOVO - Mostrar informações do sistema
-    mostrarInfoSistema() {
-        const info = this.calculadora.obterInfoSistema();
-        console.log('🎯 Sistema de Banco de Horas:', info);
     }
 
     // ✅ NOVO - Salvar configuração financeira
@@ -451,7 +362,7 @@ class BancoHorasApp {
             const valorHora = parseFloat(document.getElementById('valorHora')?.value || '25');
             
             if (valorHora < 1 || valorHora > 1000) {
-                this.mostrarNotificacao('❌ Valor da hora deve estar entre R$ 1,00 e R$ 1.000,00', 'error');
+                alert('❌ Valor da hora deve estar entre R$ 1,00 e R$ 1.000,00');
                 return;
             }
 
@@ -468,11 +379,11 @@ class BancoHorasApp {
             this.atualizarTotais();
             this.atualizarContadores();
 
-            this.mostrarNotificacao('✅ Configuração financeira salva!', 'success');
+            this.mostrarSucesso('✅ Configuração financeira salva!');
 
         } catch (error) {
             console.error('❌ Erro ao salvar configuração:', error);
-            this.mostrarNotificacao('❌ Erro ao salvar configuração', 'error');
+            alert('❌ Erro ao salvar configuração');
         }
     }
 
@@ -523,7 +434,7 @@ class BancoHorasApp {
     adicionarRegistro(registro) {
         this.registros.push(registro);
         this.storage.salvarRegistros(this.registros);
-        this.mostrarNotificacao('✅ Plantão registrado com sucesso!', 'success');
+        this.mostrarSucesso('✅ Plantão registrado com sucesso!');
     }
 
     // ✅ ATUALIZAR REGISTRO
@@ -533,13 +444,13 @@ class BancoHorasApp {
             this.registros[index] = registro;
             this.storage.salvarRegistros(this.registros);
             this.registroEditando = null;
-            this.mostrarNotificacao('✅ Plantão atualizado com sucesso!', 'success');
+            this.mostrarSucesso('✅ Plantão atualizado com sucesso!');
         }
     }
 
     // ✅ CORRIGIDO - Limpar formulário com IDs corretos
     limparFormulario() {
-        const campos = ['data', 'entrada', 'saida', 'pausa', 'horasExtras', 'descricao'];
+        const campos = ['data', 'entrada', 'saida', 'pausa', 'horasExtras'];
         const checkboxes = ['feriado', 'fimSemana', 'usarBancoHoras'];
 
         campos.forEach(id => {
@@ -573,59 +484,22 @@ class BancoHorasApp {
         document.getElementById('feriado').checked = registro.feriado || false;
         document.getElementById('fimSemana').checked = registro.fimDeSemana || false;
         document.getElementById('usarBancoHoras').checked = registro.usarBancoHoras || false;
-        
-        if (document.getElementById('descricao')) {
-            document.getElementById('descricao').value = registro.descricao || '';
-        }
 
         this.registroEditando = registro;
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
-        this.mostrarNotificacao('📝 Registro carregado para edição', 'info');
+        this.mostrarSucesso('📝 Registro carregado para edição');
     }
 
-    // ✅ CORREÇÃO - Exclusão mais robusta
+    // ✅ EXCLUIR REGISTRO
     excluirRegistro(id) {
-        try {
-            console.log('🗑️ Tentando excluir registro:', id);
-            
-            // Verificar se o registro existe
-            const registroExiste = this.registros.find(r => r.id === id);
-            if (!registroExiste) {
-                this.mostrarNotificacao('❌ Registro não encontrado', 'error');
-                return;
-            }
-
-            if (!confirm('❓ Tem certeza que deseja excluir este plantão?')) {
-                return;
-            }
-
-            // Salvar estado anterior para possível rollback
-            const registrosAnteriores = [...this.registros];
-            
-            // Remover registro
+        if (confirm('❓ Tem certeza que deseja excluir este plantão?')) {
             this.registros = this.registros.filter(r => r.id !== id);
-            
-            // Salvar com verificação
-            const sucessoSalvar = this.storage.salvarRegistros(this.registros);
-            
-            if (sucessoSalvar) {
-                // Atualizar interface
-                this.renderizarRegistros();
-                this.atualizarTotais();
-                this.atualizarContadores();
-                
-                this.mostrarNotificacao('✅ Plantão excluído com sucesso!', 'success');
-                console.log('✅ Registro excluído:', id);
-            } else {
-                // Rollback em caso de erro
-                this.registros = registrosAnteriores;
-                this.mostrarNotificacao('❌ Erro ao excluir registro', 'error');
-            }
-
-        } catch (error) {
-            console.error('❌ Erro na exclusão:', error);
-            this.mostrarNotificacao('❌ Erro interno ao excluir registro', 'error');
+            this.storage.salvarRegistros(this.registros);
+            this.renderizarRegistros();
+            this.atualizarTotais();
+            this.atualizarContadores();
+            this.mostrarSucesso('✅ Plantão excluído com sucesso!');
         }
     }
 
@@ -637,7 +511,7 @@ class BancoHorasApp {
             this.renderizarRegistros();
             this.atualizarTotais();
             this.atualizarContadores();
-            this.mostrarNotificacao('✅ Todos os dados foram limpos!', 'success');
+            this.mostrarSucesso('✅ Todos os dados foram limpos!');
         }
     }
 
@@ -664,53 +538,37 @@ class BancoHorasApp {
             a.click();
             window.URL.revokeObjectURL(url);
             
-            this.mostrarNotificacao('✅ Arquivo CSV exportado!', 'success');
+            this.mostrarSucesso('✅ Arquivo CSV exportado!');
         } catch (error) {
             console.error('❌ Erro ao exportar CSV:', error);
-            this.mostrarNotificacao('❌ Erro ao exportar CSV', 'error');
+            alert('❌ Erro ao exportar CSV');
         }
     }
 
     exportarPDF() {
-        this.mostrarNotificacao('📄 Funcionalidade de exportar PDF será implementada em breve!', 'info');
+        alert('📄 Funcionalidade de exportar PDF será implementada em breve!');
     }
 
-        salvarDados() {
+    salvarDados() {
         try {
             this.storage.salvarRegistros(this.registros);
-            this.mostrarNotificacao('✅ Dados salvos com sucesso!', 'success');
+            this.mostrarSucesso('✅ Dados salvos com sucesso!');
         } catch (error) {
             console.error('❌ Erro ao salvar dados:', error);
-            this.mostrarNotificacao('❌ Erro ao salvar dados', 'error');
+            alert('❌ Erro ao salvar dados');
         }
     }
 
-    // ✅ CORRIGIDO - Sistema de notificações melhorado
-    mostrarNotificacao(mensagem, tipo = 'success') {
-        console.log('📢', mensagem);
-        
-        // Definir cores por tipo
-        const cores = {
-            success: 'bg-green-500',
-            error: 'bg-red-500',
-            info: 'bg-blue-500',
-            warning: 'bg-yellow-500'
-        };
-
-        const icones = {
-            success: 'fas fa-check-circle',
-            error: 'fas fa-exclamation-circle',
-            info: 'fas fa-info-circle',
-            warning: 'fas fa-exclamation-triangle'
-        };
+    mostrarSucesso(mensagem) {
+        console.log('✅', mensagem);
         
         // Criar notificação visual moderna
         const notificacao = document.createElement('div');
-        notificacao.className = `fixed top-4 right-4 ${cores[tipo]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full max-w-sm`;
+        notificacao.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full';
         notificacao.innerHTML = `
             <div class="flex items-center gap-2">
-                <i class="${icones[tipo]}"></i>
-                <span class="text-sm">${mensagem}</span>
+                <i class="fas fa-check-circle"></i>
+                <span>${mensagem}</span>
             </div>
         `;
         
@@ -721,165 +579,25 @@ class BancoHorasApp {
             notificacao.classList.remove('translate-x-full');
         }, 100);
         
-        // Remover após 4 segundos (mais tempo para ler)
+        // Remover após 3 segundos
         setTimeout(() => {
             notificacao.classList.add('translate-x-full');
             setTimeout(() => {
-                if (document.body.contains(notificacao)) {
-                    document.body.removeChild(notificacao);
-                }
+                document.body.removeChild(notificacao);
             }, 300);
-        }, 4000);
-    }
-
-    // ✅ NOVO - Mostrar notificação de sucesso (compatibilidade)
-    mostrarSucesso(mensagem) {
-        this.mostrarNotificacao(mensagem, 'success');
+        }, 300);
     }
 }
 
-// ✅ CORREÇÃO - Inicialização mais robusta
-let app = null;
-let tentativasInicializacao = 0;
-const MAX_TENTATIVAS = 3;
+// ✅ INICIALIZAR APLICAÇÃO
+let app;
+document.addEventListener('DOMContentLoaded', () => {
+    app = new BancoHorasApp();
+});
 
-function inicializarApp() {
-    try {
-        // Evitar múltiplas inicializações
-        if (app) {
-            console.log('🎯 App já inicializado');
-            return;
-        }
-
-        tentativasInicializacao++;
-        console.log(`🚀 Tentativa ${tentativasInicializacao} de inicialização...`);
-
-        // Verificar se elementos essenciais existem
-        const elementosEssenciais = [
-            'bancoHorasForm',
-            'tabelaBody',
-            'valorHora'
-        ];
-
-        const elementosFaltando = elementosEssenciais.filter(id => !document.getElementById(id));
-        
-        if (elementosFaltando.length > 0) {
-            throw new Error(`Elementos não encontrados: ${elementosFaltando.join(', ')}`);
-        }
-
-        // Limpar storage cache antes de inicializar
-        if (window.localStorage) {
-            console.log('🧹 Limpando cache do storage...');
-        }
-
-        app = new BancoHorasApp();
-        
-        // Verificar se inicializou corretamente
-        if (app && app.storage && app.calculadora) {
-            console.log('✅ App inicializado com sucesso!');
-            
-            // Forçar atualização da interface
-            setTimeout(() => {
-                app.renderizarRegistros();
-                app.atualizarTotais();
-                app.atualizarContadores();
-            }, 100);
-            
-        } else {
-            throw new Error('Componentes da app não inicializados corretamente');
-        }
-
-    } catch (error) {
-        console.error(`❌ Erro na inicialização (tentativa ${tentativasInicializacao}):`, error);
-        
-        if (tentativasInicializacao < MAX_TENTATIVAS) {
-            console.log('🔄 Tentando novamente em 1 segundo...');
-            setTimeout(inicializarApp, 1000);
-        } else {
-            console.error('❌ Falha crítica na inicialização após 3 tentativas');
-            mostrarErroInicializacao();
-        }
-    }
+// Fallback para inicialização
+if (document.readyState !== 'loading') {
+    app = new BancoHorasApp();
 }
 
-function mostrarErroInicializacao() {
-    const container = document.body;
-    if (container) {
-        container.innerHTML = `
-            <div class="min-h-screen bg-red-50 flex items-center justify-center p-4">
-                <div class="bg-white p-8 rounded-lg shadow-lg max-w-md text-center">
-                    <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
-                    <h2 class="text-xl font-bold text-red-700 mb-2">Erro de Inicialização</h2>
-                    <p class="text-gray-600 mb-4">Não foi possível carregar a aplicação.</p>
-                    <div class="space-y-2">
-                        <button onclick="location.reload()" 
-                                class="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                            🔄 Recarregar Página
-                        </button>
-                        <button onclick="localStorage.clear(); location.reload()" 
-                                class="w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-                            🧹 Limpar Cache e Recarregar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-}
-
-// ✅ CORREÇÃO - Funções globais mais robustas
-window.editarRegistro = function(id) {
-    try {
-        if (!app) {
-            console.error('❌ App não inicializada para edição');
-            return;
-        }
-        app.editarRegistro(id);
-    } catch (error) {
-        console.error('❌ Erro na edição:', error);
-    }
-};
-
-window.excluirRegistro = function(id) {
-    try {
-        if (!app) {
-            console.error('❌ App não inicializada para exclusão');
-            alert('Sistema ainda não foi carregado. Aguarde um momento e tente novamente.');
-            return;
-        }
-        app.excluirRegistro(id);
-    } catch (error) {
-        console.error('❌ Erro na exclusão:', error);
-        alert('Erro ao excluir registro. Tente recarregar a página.');
-    }
-};
-
-// ✅ NOVO - Função para verificar se app está pronta
-window.verificarApp = function() {
-    if (app && app.storage && app.calculadora) {
-        console.log('✅ App está funcionando corretamente');
-        return true;
-    } else {
-        console.log('❌ App não está inicializada corretamente');
-        return false;
-    }
-};
-
-// Garante que o app só inicializa após o DOM estar pronto
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    inicializarApp();
-    window.app = app;
-  });
-} else {
-  inicializarApp();
-  window.app = app;
-}
-
-console.log('🚀 App principal com banco de horas CORRIGIDO - v5.0.0');
-console.log('✅ Bônus fim de semana: 190% do valor base (100% + 90% bônus)');
-console.log('✅ Detecção automática de fim de semana implementada');
-console.log('✅ Sistema de notificações melhorado');
-console.log('✅ Compatibilidade com múltiplos navegadores');
-console.log('✅ Interface moderna e responsiva com Tailwind CSS');
-console.log('✅ Banco de Horas App pronto para uso!');
+console.log('🚀 App principal com banco de horas carregado - v4.1.0');

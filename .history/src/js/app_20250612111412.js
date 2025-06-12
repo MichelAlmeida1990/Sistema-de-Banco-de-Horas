@@ -13,7 +13,6 @@ class BancoHorasApp {
         
         // Inicializar
         this.init();
-        window.app = this; // Torna a instância global para uso em funções globais
     }
 
     init() {
@@ -607,7 +606,7 @@ class BancoHorasApp {
             this.registros = this.registros.filter(r => r.id !== id);
             
             // Salvar com verificação
-            const sucessoSalvar = this.storage.salvarRegistros(this.registros);
+            const sucessoSalvar = this.storage.salvarRegistrosComVerificacao(this.registros);
             
             if (sucessoSalvar) {
                 // Atualizar interface
@@ -868,12 +867,10 @@ window.verificarApp = function() {
 // Garante que o app só inicializa após o DOM estar pronto
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    inicializarApp();
-    window.app = app;
+    window.app = new BancoHorasApp();
   });
 } else {
-  inicializarApp();
-  window.app = app;
+  window.app = new BancoHorasApp();
 }
 
 console.log('🚀 App principal com banco de horas CORRIGIDO - v5.0.0');

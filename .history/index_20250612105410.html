@@ -378,17 +378,6 @@
     <script>
       // Debug: log para garantir que o app está carregando
       console.log('🟢 index.html carregado');
-      // Forçar prevenção do submit padrão caso o app.js não capture
-      document.addEventListener('DOMContentLoaded', function() {
-        var form = document.getElementById('bancoHorasForm');
-        if(form) {
-          form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            // Se o app.js não interceptar, pelo menos não recarrega
-            console.log('🟡 Submit do formulário interceptado pelo fallback do index.html');
-          });
-        }
-      });
     </script>
     <script src="src/js/storage.js"></script>
     <script src="src/js/calculos.js"></script>

@@ -76,18 +76,9 @@ class CalculadoraBancoHoras {
 
             // 6. Calcular valores
             const valorHora = this.calcularValorHora(valorHoraPadrao, temBonus, ehFeriado);
-            let valorTotal, valorHorasNormais, valorHorasExtras;
-            if (temBonus) {
-                // Todas as horas recebem bônus
-                valorTotal = horasTrabalhadas * valorHora;
-                valorHorasNormais = horasTrabalhadas * valorHora;
-                valorHorasExtras = 0;
-            } else {
-                // Horas normais e extras separadas
-                valorHorasNormais = horasNormaisParaPagamento * valorHora;
-                valorHorasExtras = horasExtrasRemuneradas * valorHora;
-                valorTotal = valorHorasNormais + valorHorasExtras;
-            }
+            const valorHorasNormais = horasNormaisParaPagamento * valorHora;
+            const valorHorasExtras = horasExtrasRemuneradas * valorHora;
+            const valorTotal = valorHorasNormais + valorHorasExtras;
 
             const resultado = {
                 horasTrabalhadas: Math.round(horasTrabalhadas * 100) / 100,
