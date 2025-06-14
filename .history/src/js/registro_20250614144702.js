@@ -23,7 +23,7 @@ class RegistroPlantao {
     }
 
     setupEventListeners() {
-        const form = document.getElementById('formRegistro');
+        const form = document.getElementById('bancoHorasForm');
         const data = document.getElementById('data');
 
         if (form) {
@@ -292,9 +292,9 @@ class RegistroPlantao {
     renderizarTabelaVazia() {
         return `
             <tr>
-                <td colspan="8" class="p-8 text-center text-gray-300">
+                <td colspan="8" class="p-8 text-center text-gray-500">
                     <i class="fas fa-info-circle text-4xl mb-3 block"></i>
-                    <p class="text-lg font-medium text-white">Nenhum registro encontrado</p>
+                    <p class="text-lg font-medium">Nenhum registro encontrado</p>
                     <p class="text-sm">Adicione seu primeiro plantão usando o formulário acima</p>
                 </td>
             </tr>
@@ -316,50 +316,50 @@ class RegistroPlantao {
             const tipoPlantao = this.obterTipoPlantao(registro);
 
             return `
-                <tr class="table-row">
-                    <td class="p-4 text-white">
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-4 text-gray-900">
                         ${this.formatarData(registro.data)}
-                        <div class="text-xs text-gray-300 mt-1">
+                        <div class="text-xs text-gray-500 mt-1">
                             ${this.obterDiaSemana(registro.data)}
                         </div>
                     </td>
                     <td class="p-4">
-                        <span class="${this.obterClasseTipoModerno(tipoPlantao)}">${tipoPlantao}</span>
+                        <span class="${this.obterClasseTipo(tipoPlantao)}">${tipoPlantao}</span>
                     </td>
-                    <td class="p-4 text-white">
+                    <td class="p-4 text-gray-900">
                         ${registro.entrada}
-                        <div class="text-xs text-gray-300 mt-1">Entrada</div>
+                        <div class="text-xs text-gray-500 mt-1">Entrada</div>
                     </td>
-                    <td class="p-4 text-white">
+                    <td class="p-4 text-gray-900">
                         ${registro.saida}
-                        <div class="text-xs text-gray-300 mt-1">Saída</div>
+                        <div class="text-xs text-gray-500 mt-1">Saída</div>
                     </td>
-                    <td class="p-4 text-white">
+                    <td class="p-4 text-gray-900">
                         ${registro.pausa || 60}min
-                        <div class="text-xs text-gray-300 mt-1">Pausa</div>
+                        <div class="text-xs text-gray-500 mt-1">Pausa</div>
                     </td>
-                    <td class="p-4 text-white">
+                    <td class="p-4 text-gray-900">
                         ${calculo.horasTrabalhadas.toFixed(1)}h
-                        <div class="text-xs text-gray-300 mt-1">
+                        <div class="text-xs text-gray-500 mt-1">
                             ${calculo.saldoHoras > 0 ? `+${calculo.saldoHoras.toFixed(1)}h extra` : 
                               calculo.saldoHoras < 0 ? `${calculo.saldoHoras.toFixed(1)}h` : 'Jornada completa'}
                         </div>
                     </td>
-                    <td class="p-4 text-white">
-                        R$ ${calculo.valorTotal.toFixed(2).replace('.', ',')}
-                        <div class="text-xs text-gray-300 mt-1">
-                            R$ ${calculo.valorHora.toFixed(2).replace('.', ',')}/h
+                    <td class="p-4 text-gray-900">
+                        R$ ${calculo.valorTotal.toFixed(2)}
+                        <div class="text-xs text-gray-500 mt-1">
+                            R$ ${calculo.valorHora.toFixed(2)}/h
                             ${calculo.temBonus ? `(+${((calculo.multiplicadorBonus - 1) * 100).toFixed(0)}%)` : ''}
                         </div>
                     </td>
                     <td class="p-4">
                         <div class="flex gap-2">
                             <button onclick="window.app.registroPlantao.editarRegistro('${registro.id}')"
-                                    class="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-500 hover:bg-opacity-20 transition-all">
+                                    class="text-blue-600 hover:text-blue-800 p-1 rounded">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button onclick="window.app.registroPlantao.excluirRegistro('${registro.id}')"
-                                    class="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 transition-all">
+                                    class="text-red-600 hover:text-red-800 p-1 rounded">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -426,17 +426,6 @@ class RegistroPlantao {
                 return 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800';
             default:
                 return 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800';
-        }
-    }
-
-    obterClasseTipoModerno(tipo) {
-        switch (tipo) {
-            case 'Feriado':
-                return 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-500 bg-opacity-20 text-red-300 border border-red-500 border-opacity-30';
-            case 'Fim de Semana':
-                return 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500 bg-opacity-20 text-green-300 border border-green-500 border-opacity-30';
-            default:
-                return 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500 bg-opacity-20 text-blue-300 border border-blue-500 border-opacity-30';
         }
     }
 

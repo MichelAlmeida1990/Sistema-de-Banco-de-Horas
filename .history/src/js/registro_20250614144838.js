@@ -23,7 +23,7 @@ class RegistroPlantao {
     }
 
     setupEventListeners() {
-        const form = document.getElementById('formRegistro');
+        const form = document.getElementById('bancoHorasForm');
         const data = document.getElementById('data');
 
         if (form) {
@@ -426,17 +426,6 @@ class RegistroPlantao {
                 return 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800';
             default:
                 return 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800';
-        }
-    }
-
-    obterClasseTipoModerno(tipo) {
-        switch (tipo) {
-            case 'Feriado':
-                return 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-500 bg-opacity-20 text-red-300 border border-red-500 border-opacity-30';
-            case 'Fim de Semana':
-                return 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500 bg-opacity-20 text-green-300 border border-green-500 border-opacity-30';
-            default:
-                return 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500 bg-opacity-20 text-blue-300 border border-blue-500 border-opacity-30';
         }
     }
 

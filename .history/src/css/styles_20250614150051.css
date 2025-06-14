@@ -329,13 +329,12 @@ body {
 }
 
 .loading-spinner {
-    border: 4px solid rgba(255, 255, 255, 0.3);
+    border: 3px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    border-top: 4px solid #667eea;
-    width: 40px;
-    height: 40px;
+    border-top: 3px solid #667eea;
+    width: 20px;
+    height: 20px;
     animation: spin 1s linear infinite;
-    margin: 0 auto;
 }
 
 /* Responsividade */
@@ -409,19 +408,3 @@ th, td {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
 }
-
-/* Gradientes para tela de loading */
-.bg-gradient-to-br {
-    background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
-}
-
-.from-purple-900 { --tw-gradient-from: #581c87; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(88, 28, 135, 0)); }
-.via-blue-900 { --tw-gradient-to: #1e3a8a; --tw-gradient-stops: var(--tw-gradient-from), #1e3a8a, var(--tw-gradient-to, rgba(30, 58, 138, 0)); }
-.to-indigo-900 { --tw-gradient-to: #312e81; }
-
-.bg-gradient-to-br.from-purple-900.via-blue-900.to-indigo-900 {
-    background: linear-gradient(to bottom right, #581c87, #1e3a8a, #312e81);
-}
-
-/* Utilitários adicionais */
-.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }

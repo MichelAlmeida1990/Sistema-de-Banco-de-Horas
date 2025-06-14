@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>💼 Sistema de Banco de Horas - Enfermagem</title>
     
-    <!-- ✅ SCRIPT DE CORREÇÃO -->
-    <script src="fix-errors.js"></script>
-    
     <!-- ✅ CUSTOM CSS -->
     <link rel="stylesheet" href="src/css/styles.css">
     
@@ -368,7 +365,7 @@
                     </div>
                     
                     <div class="md:col-span-2 lg:col-span-3 flex justify-end">
-                        <button type="submit" id="btnRegistrar" class="btn-gradient text-white px-8 py-4 rounded-xl font-semibold flex items-center gap-3 shadow-lg text-lg">
+                        <button type="submit" class="btn-gradient text-white px-8 py-4 rounded-xl font-semibold flex items-center gap-3 shadow-lg text-lg">
                             <i class="fas fa-plus-circle"></i>
                             Registrar Plantão
                         </button>
@@ -507,63 +504,63 @@
             }
 
             // ✅ GERENCIAMENTO DE AUTENTICAÇÃO
-                        window.auth.onAuthStateChanged(async (user) => {
-                const loadingScreen = document.getElementById('loadingScreen');
-                const loginScreen = document.getElementById('loginScreen');
-                const appContainer = document.getElementById('appContainer');
+            window.auth.onAuthStateChanged(async (user) => {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const loginScreen = document.getElementById('loginScreen');
+            const appContainer = document.getElementById('appContainer');
 
-                if (user) {
-                    console.log('✅ Usuário autenticado:', user.email);
-                    
-                    // Mostrar email do usuário
-                    document.getElementById('userEmail').textContent = user.email;
-                    
-                    // Inicializar aplicação
-                    try {
-                        app = new BancoHorasApp(user.uid);
-                        
-                        // Mostrar aplicação
-                        loadingScreen.style.display = 'none';
-                        loginScreen.style.display = 'none';
-                        appContainer.style.display = 'block';
-                        
-                    } catch (error) {
-                        console.error('❌ Erro ao inicializar aplicação:', error);
-                        alert('Erro ao carregar a aplicação. Tente novamente.');
-                    }
-                    
-                } else {
-                    console.log('❌ Usuário não autenticado');
-                    
-                    // Mostrar tela de login
-                    loadingScreen.style.display = 'none';
-                    loginScreen.style.display = 'flex';
-                    appContainer.style.display = 'none';
-                }
-            });
-
-            // ✅ LOGIN COM GOOGLE
-            document.getElementById('loginBtn').addEventListener('click', async () => {
+            if (user) {
+                console.log('✅ Usuário autenticado:', user.email);
+                
+                // Mostrar email do usuário
+                document.getElementById('userEmail').textContent = user.email;
+                
+                // Inicializar aplicação
                 try {
-                    const provider = new firebase.auth.GoogleAuthProvider();
-                    await window.auth.signInWithPopup(provider);
+                    app = new BancoHorasApp(user.uid);
+                    
+                    // Mostrar aplicação
+                    loadingScreen.style.display = 'none';
+                    loginScreen.style.display = 'none';
+                    appContainer.style.display = 'block';
+                    
                 } catch (error) {
-                    console.error('❌ Erro no login:', error);
-                    alert('Erro ao fazer login. Tente novamente.');
+                    console.error('❌ Erro ao inicializar aplicação:', error);
+                    alert('Erro ao carregar a aplicação. Tente novamente.');
                 }
-            });
+                
+            } else {
+                console.log('❌ Usuário não autenticado');
+                
+                // Mostrar tela de login
+                loadingScreen.style.display = 'none';
+                loginScreen.style.display = 'flex';
+                appContainer.style.display = 'none';
+            }
+        });
 
-            // ✅ LOGOUT
-            document.getElementById('logoutBtn').addEventListener('click', async () => {
-                if (confirm('Deseja realmente sair do sistema?')) {
-                    try {
-                        await window.auth.signOut();
-                    } catch (error) {
-                        console.error('❌ Erro no logout:', error);
-                        alert('Erro ao sair. Tente novamente.');
-                    }
+        // ✅ LOGIN COM GOOGLE
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                await window.auth.signInWithPopup(provider);
+            } catch (error) {
+                console.error('❌ Erro no login:', error);
+                alert('Erro ao fazer login. Tente novamente.');
+            }
+        });
+
+        // ✅ LOGOUT
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            if (confirm('Deseja realmente sair do sistema?')) {
+                try {
+                    await window.auth.signOut();
+                } catch (error) {
+                    console.error('❌ Erro no logout:', error);
+                    alert('Erro ao sair. Tente novamente.');
                 }
-            });
+            }
+        });
 
             // ✅ CONFIGURAR EVENTOS ADICIONAIS
             // Adicionar animação de entrada aos elementos

@@ -23,7 +23,7 @@ class RegistroPlantao {
     }
 
     setupEventListeners() {
-        const form = document.getElementById('formRegistro');
+        const form = document.getElementById('bancoHorasForm');
         const data = document.getElementById('data');
 
         if (form) {
