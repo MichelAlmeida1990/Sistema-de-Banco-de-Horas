@@ -551,7 +551,7 @@
                     
                     // Inicializar aplicação
                     try {
-                        app = new BancoHorasApp(user.uid);
+                        window.app = new BancoHorasApp(user.uid);
                         
                         // Mostrar aplicação
                         loadingScreen.style.display = 'none';
@@ -691,7 +691,7 @@
                     document.getElementById('userEmail').textContent = offlineUser.email;
                     
                     // Inicializar aplicação em modo offline
-                    app = new BancoHorasApp(offlineUser.uid);
+                    window.app = new BancoHorasApp(offlineUser.uid);
                     
                     // Mostrar aplicação
                     document.getElementById('loadingScreen').style.display = 'none';
@@ -700,8 +700,8 @@
                     
                     // Mostrar notificação
                     setTimeout(() => {
-                        if (app) {
-                            app.mostrarNotificacao('🔄 Modo offline ativado! Dados salvos localmente.', 'info');
+                        if (window.app) {
+                            window.app.mostrarNotificacao('🔄 Modo offline ativado! Dados salvos localmente.', 'info');
                         }
                     }, 1000);
                     
