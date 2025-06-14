@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏥 Sistema de Banco de Horas - Enfermagem</title>
+    
+    <!-- Tailwind CSS local -->
+    <link href="./dist/styles.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-green-50 min-h-screen">
+    <!-- Firebase App (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <!-- Firebase Auth (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <!-- Firebase Firestore (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <!-- Firebase Initialization -->
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAsYDPDgw1GO_yOB6prCxvxDfwI3kEfhvE",
+            authDomain: "banco-de-horas-596ca.firebaseapp.com",
+            projectId: "banco-de-horas-596ca",
+            storageBucket: "banco-de-horas-596ca.appspot.com",
+            messagingSenderId: "75423178670",
+            appId: "1:75423178670:web:b62ce90d78292f8485f23f",
+            measurementId: "G-9RBTXPJ3PQ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Initialize Auth and make it globally available
+        window.auth = firebase.auth();
+        
+        // Initialize Firestore
+        window.db = firebase.firestore();
+        
+        // Configure Firestore
+        window.db.settings({
+            cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+        });
+        
+        // Enable offline persistence
+        window.db.enablePersistence({synchronizeTabs: true})
+            .catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    console.warn('⚠️ Persistência falhou: múltiplas abas abertas');
+                } else if (err.code == 'unimplemented') {
+                    console.warn('⚠️ Navegador não suporta persistência');
+                }
+            });
+
+        // Variável para controlar se o app já foi inicializado
+        let appInitialized = false;
+
+        // Auth state observer - ÚNICO LISTENER
+        window.auth.onAuthStateChanged(user => {
+            if (user) {
+                console.log('👤 Usuário autenticado:', user.email);
+                
+                // Atualizar interface
+                const loginBox = document.getElementById('loginBox');
+                const mainContent = document.querySelector('main');
+                const userBar = document.getElementById('userBar');
+                const userEmail = document.getElementById('userEmail');
+                
+                if (loginBox) loginBox.style.display = 'none';
+                if (mainContent) mainContent.style.display = '';
+                if (userBar) userBar.style.display = 'flex';
+                if (userEmail) userEmail.textContent = user.email;
+                
+                // Inicializar app apenas uma vez
+                if (!appInitialized) {
+                    console.log('🚀 Inicializando aplicação...');
+                    // Aguardar carregamento dos scripts
+                    if (window.BancoHorasApp) {
+                        window.app = new BancoHorasApp(user.uid);
+                        appInitialized = true;
+                    } else {
+                        // Aguardar scripts carregarem
+                        setTimeout(() => {
+                            if (window.BancoHorasApp) {
+                                window.app = new BancoHorasApp(user.uid);
+                                appInitialized = true;
+                            }
+                        }, 100);
+                    }
+                }
+            } else {
+                console.log('⚠️ Usuário não autenticado');
+                
+                // Atualizar interface
+                const loginBox = document.getElementById('loginBox');
+                const mainContent = document.querySelector('main');
+                const userBar = document.getElementById('userBar');
+                
+                if (loginBox) loginBox.style.display = '';
+                if (mainContent) mainContent.style.display = 'none';
+                if (userBar) userBar.style.display = 'none';
+                
+                // Limpar app
+                window.app = null;
+                appInitialized = false;
+            }
+        });
+    </script>
+
+    <!-- App Scripts (ordem importa!) -->
+    <script src="src/js/calculadora.js"></script>
+    <script src="src/js/storage.js"></script>
+    <script src="src/js/configuracao.js"></script>
+    <script src="src/js/registro.js"></script>
+    <script src="src/js/exportar.js"></script>
+    <script src="src/js/app.js"></script>
+
+    <!-- Login Box -->
+    <div id="loginBox" class="fixed inset-0 flex items-center justify-center bg-white">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full mx-4">
+            <div class="text-center mb-6">
+                <img src="assets/logo.png" alt="Logo" class="w-16 h-16 mx-auto mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Bem-vindo 👋</h2>
+                <p class="text-gray-600">Acesse sua conta para gerenciar seus plantões</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <input type="email" id="email" placeholder="Email" 
+                           class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <input type="password" id="senha" placeholder="Senha" 
+                           class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="submit" 
+                        class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                    Entrar
+                </button>
+                <button type="button" onclick="registrar()" 
+                        class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors">
+                    Registrar
+                </button>
+            </form>
+            
+            <div id="errorMsg" class="mt-4 text-red-500 text-center"></div>
+        </div>
+    </div>
+
+    <!-- User Bar -->
+    <div id="userBar" class="bg-white shadow-md p-4 mb-6" style="display: none;">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-100 p-2 rounded-full">
+                    <i class="fas fa-user text-blue-600"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Logado como:</p>
+                    <p id="userEmail" class="font-semibold text-gray-800"></p>
+                </div>
+            </div>
+            <button onclick="window.auth.signOut()" 
+                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main style="display: none;">
+        <!-- Estatísticas Rápidas -->
+        <section class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-500">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class="fas fa-clock text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">Saldo Total</p>
+                        <p id="saldoTotalCard" class="text-2xl font-bold text-blue-600">0h</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500">
+                <div class="flex items-center gap-3">
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-plus-circle text-green-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">Bônus 90%</p>
+                        <p id="bonusTotalCard" class="text-2xl font-bold text-green-600">0h</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-purple-500">
+                <div class="flex items-center gap-3">
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <i class="fas fa-calendar-day text-purple-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">Plantões</p>
+                        <p id="totalPlantoes" class="text-2xl font-bold text-purple-600">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-pink-500">
+                <div class="flex items-center gap-3">
+                    <div class="bg-pink-100 p-3 rounded-full">
+                        <i class="fas fa-medal text-pink-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">Valor Total</p>
+                        <p id="valorTotalCard" class="text-2xl font-bold text-pink-600">R$ 0,00</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ✅ CONFIGURAÇÃO DO VALOR DA HORA - CORRIGIDA -->
+        <section class="mb-6 bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="bg-blue-100 p-2 rounded-full">
+                    <i class="fas fa-dollar-sign text-blue-600"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800">Configuração Financeira</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label for="valorHora" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-money-bill text-blue-600 mr-1"></i>
+                        Valor da Hora (R$)
+                    </label>
+                    <input type="number" id="valorHora" name="valorHora" 
+                           min="1" max="1000" step="0.01" value="25.00" required
+                           class="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calculator text-blue-600 mr-1"></i>
+                        Valor com Bônus 90%
+                    </label>
+                    <div class="bg-gray-100 border-2 border-gray-300 rounded-lg p-3">
+                        <span id="valorComBonus" class="text-lg font-bold text-blue-900">R$ 47,50</span>
+                        <small class="text-gray-600 block">por hora fim de semana</small>
+                    </div>
+                </div>
+
+                <!-- Botão Salvar -->
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button 
+                        type="button" 
+                        class="btn btn-primary flex-grow-1" 
+                        id="salvarConfiguracao"
+                    >
+                        <i class="fas fa-save me-2"></i>
+                        Salvar
+                    </button>
+                    <button 
+                        type="button" 
+                        class="btn btn-danger" 
+                        id="resetarDados"
+                        onclick="app.resetarDados()"
+                        title="Apagar todos os dados"
+                    >
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Texto explicativo -->
+            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-start gap-2">
+                    <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
+                    <div class="text-sm text-blue-800">
+                        <strong>Importante:</strong> O valor da hora será aplicado a todos os cálculos. 
+                        Fins de semana recebem bônus de <strong>90% adicional</strong> 
+                        (valor base + 90% do valor base).
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ✅ FORMULÁRIO DE REGISTRO - CORRIGIDO -->
+        <section class="mb-6 bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="bg-blue-100 p-2 rounded-full">
+                    <i class="fas fa-stethoscope text-blue-600"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800">Registrar Plantão</h2>
+            </div>
+            
+            <form id="bancoHorasForm" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Data -->
+                    <div class="space-y-2">
+                        <label for="data" class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                            <i class="fas fa-calendar text-blue-500"></i>
+                            Data do Plantão
+                        </label>
+                        <input type="date" id="data" name="data" required 
+                               class="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                    </div>
+                    
+                    <!-- Entrada -->
+                    <div class="space-y-2">
+                        <label for="entrada" class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                            <i class="fas fa-sign-in-alt text-green-500"></i>
+                            Hora de Entrada
+                        </label>
+                        <input type="time" id="entrada" name="entrada" required
+                               class="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                    </div>
+                    
+                    <!-- Saída -->
+                    <div class="space-y-2">
+                        <label for="saida" class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                            <i class="fas fa-sign-out-alt text-red-500"></i>
+                            Hora de Saída
+                        </label>
+                        <input type="time" id="saida" name="saida" required
+                               class="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all">
+                    </div>
+                    
+                    <!-- Pausa -->
+                    <div class="space-y-2">
+                        <label for="pausa" class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                            <i class="fas fa-coffee text-yellow-500"></i>
+                            Pausa (minutos)
+                        </label>
+                        <input type="number" id="pausa" name="pausa" value="60" min="0" max="240" step="15"
+                               class="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 transition-all">
+                    </div>
+                    
+                    <!-- Checkboxes -->
+                    <div class="space-y-4 sm:col-span-2">
+                        <div class="flex items-center gap-4">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" id="feriado" name="feriado" 
+                                       class="form-checkbox h-5 w-5 text-red-500 rounded border-gray-300">
+                                <span class="ml-2 text-gray-700">Feriado</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" id="fimSemana" name="fimSemana" 
+                                       class="form-checkbox h-5 w-5 text-blue-500 rounded border-gray-300">
+                                <span class="ml-2 text-gray-700">Fim de Semana</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Observações -->
+                    <div class="sm:col-span-2 lg:col-span-3">
+                        <label for="observacoes" class="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-comment-alt text-purple-500"></i>
+                            Observações
+                        </label>
+                        <textarea id="observacoes" name="observacoes" rows="2" 
+                                  class="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                                  placeholder="Observações opcionais sobre o plantão..."></textarea>
+                    </div>
+
+                    <!-- Botão Submit -->
+                    <div class="sm:col-span-2 lg:col-span-3 flex justify-end mt-4">
+                        <button type="submit" id="btnRegistrar" 
+                                class="bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white px-8 py-3 rounded-lg font-semibold flex items-center gap-2 shadow-lg transition-all transform hover:scale-105">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Registrar Plantão</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- ✅ TABELA DE REGISTROS - CORRIGIDA -->
+        <section class="mb-6 bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-500 to-green-500 text-white p-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-list-alt text-xl"></i>
+                    <h2 class="text-xl font-bold">Histórico de Registros</h2>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm" id="tabelaRegistros">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-4 text-left font-semibold text-gray-700">Data</th>
+                            <th class="p-4 text-left font-semibold text-gray-700">Tipo</th>
+                            <th class="p-4 text-left font-semibold text-gray-700">Entrada</th>
+                            <th class="p-4 text-left font-semibold text-gray-700">Saída</th>
+                            <th class="p-4 text-left font-semibold text-gray-700">Pausa</th>
+                            <th class="p-4 text-left font-semibold text-gray-700">Total</th>
+                            <th class="p-4 text-left font-semibold text-gray-700">Valor</th>
+                            <th class="p-4 text-left font-semibold text-gray-700">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaBody">
+                        <!-- Registros serão inseridos aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ✅ RESUMO FINAL - ATUALIZADO COM BANCO DE HORAS -->
+        <section class="mb-6 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-3 rounded-full">
+                        <i class="fas fa-chart-line text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold">Resumo Total</h3>
+                        <p class="text-blue-100">Controle geral do banco de horas</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-4 text-center flex-wrap">
+                    <div class="bg-white/20 p-4 rounded-lg">
+                        <p class="text-white/80 text-sm">Saldo Total</p>
+                        <p id="saldoTotal" class="text-2xl font-bold">0h</p>
+                    </div>
+                    <div class="bg-white/20 p-4 rounded-lg">
+                        <p class="text-white/80 text-sm">Extras Pagas</p>
+                        <p id="extrasTotal" class="text-2xl font-bold">0h</p>
+                    </div>
+                    <div class="bg-white/20 p-4 rounded-lg">
+                        <p class="text-white/80 text-sm">Banco Horas</p>
+                        <p id="bancoTotal" class="text-2xl font-bold">0h</p>
+                    </div>
+                    <div class="bg-white/20 p-4 rounded-lg">
+                        <p class="text-white/80 text-sm">Bônus 90%</p>
+                        <p id="bonusTotal" class="text-2xl font-bold">0h</p>
+                    </div>
+                    <div class="bg-white/20 p-4 rounded-lg">
+                        <p class="text-white/80 text-sm">Valor Total</p>
+                        <p id="valorTotalResumo" class="text-2xl font-bold">R$ 0,00</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ✅ BOTÕES DE AÇÃO - IDs corrigidos -->
+        <section class="flex flex-wrap gap-3 justify-center sm:justify-end">
+            <button id="limparBtn" class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 shadow-lg transition-all transform hover:scale-105">
+                <i class="fas fa-trash-alt"></i>
+                Limpar Dados
+            </button>
+            
+            <button id="exportarCsvBtn" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 shadow-lg transition-all transform hover:scale-105">
+                <i class="fas fa-file-csv"></i>
+                Exportar CSV
+            </button>
+            
+            <button id="exportarPdfBtn" class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 shadow-lg transition-all transform hover:scale-105">
+                <i class="fas fa-file-pdf"></i>
+                Exportar PDF
+            </button>
+            
+            <button id="salvarBtn" class="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 shadow-lg transition-all transform hover:scale-105">
+                <i class="fas fa-save"></i>
+                Salvar Dados
+            </button>
+        </section>
+    </main>
+
+    <footer class="bg-gradient-to-r from-blue-600 to-green-600 text-white text-center py-6 mt-12">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center justify-center gap-3 mb-2">
+                <i class="fas fa-heart text-red-300"></i>
+                <span class="text-lg font-semibold">Sistema de Banco de Horas</span>
+                <i class="fas fa-user-nurse text-blue-300"></i>
+            </div>
+            <small class="text-blue-100">&copy; 2025 - Desenvolvido com ❤️ para profissionais da saúde</small>
+        </div>
+    </footer>
+
+    <!-- Auth Scripts -->
+    <script>
+        // Login function
+        async function login(email, senha) {
+            try {
+                const errorMsg = document.getElementById('errorMsg');
+                errorMsg.textContent = 'Fazendo login...';
+                
+                await window.auth.signInWithEmailAndPassword(email, senha);
+                errorMsg.textContent = '';
+            } catch (error) {
+                console.error('Erro no login:', error);
+                let mensagem = 'Erro no login: ';
+                
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        mensagem += 'Usuário não encontrado';
+                        break;
+                    case 'auth/wrong-password':
+                        mensagem += 'Senha incorreta';
+                        break;
+                    case 'auth/invalid-email':
+                        mensagem += 'Email inválido';
+                        break;
+                    default:
+                        mensagem += error.message;
+                }
+                
+                errorMsg.textContent = mensagem;
+            }
+        }
+
+        // Register function
+        async function registrar() {
+            try {
+                const email = document.getElementById('email').value;
+                const senha = document.getElementById('senha').value;
+                const errorMsg = document.getElementById('errorMsg');
+                
+                if (!email || !senha) {
+                    errorMsg.textContent = 'Email e senha são obrigatórios';
+                    return;
+                }
+                
+                errorMsg.textContent = 'Criando conta...';
+                
+                await window.auth.createUserWithEmailAndPassword(email, senha);
+                errorMsg.textContent = '';
+            } catch (error) {
+                console.error('Erro no registro:', error);
+                let mensagem = 'Erro no registro: ';
+                
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        mensagem += 'Email já está em uso';
+                        break;
+                    case 'auth/invalid-email':
+                        mensagem += 'Email inválido';
+                        break;
+                    case 'auth/weak-password':
+                        mensagem += 'Senha muito fraca';
+                        break;
+                    default:
+                        mensagem += error.message;
+                }
+                
+                errorMsg.textContent = mensagem;
+            }
+        }
+
+        // Form submit handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            
+            if (!email || !senha) {
+                document.getElementById('errorMsg').textContent = 'Email e senha são obrigatórios';
+                return;
+            }
+            
+            await login(email, senha);
+        });
+    </script>
+</body>
+</html>
