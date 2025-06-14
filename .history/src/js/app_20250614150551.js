@@ -8,17 +8,7 @@ class BancoHorasApp {
 
         // Inicializar componentes
         this.uid = uid;
-        
-        // Escolher storage baseado na disponibilidade do Firebase
-        const isOnline = window.auth?.currentUser;
-        if (isOnline) {
-            this.storage = new Storage(uid);
-            console.log('💾 Usando Firebase Storage');
-        } else {
-            this.storage = new StorageOffline(uid);
-            console.log('📱 Usando Storage Offline');
-        }
-        
+        this.storage = new Storage(uid);
         this.calculadora = new Calculadora();
         this.configuracao = new ConfiguracaoFinanceira();
         this.registroPlantao = new RegistroPlantao(this.configuracao, this.storage);
@@ -257,51 +247,14 @@ class BancoHorasApp {
         return icones[tipo] || icones.info;
     }
 
-        async resetarDados() {
+    async resetarDados() {
         if (confirm('❓ Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita.')) {
             try {
-                this.mostrarNotificacao('🧹 Limpando todos os dados...', 'info');
-                
-                // 1. Limpar Firebase (se conectado)
-                try {
-                    await this.storage.limparRegistros();
-                    console.log('✅ Dados do Firebase limpos');
-                } catch (error) {
-                    console.warn('⚠️ Erro ao limpar Firebase (pode estar offline):', error.message);
-                }
-                
-                // 2. Limpar localStorage (modo offline)
-                try {
-                    localStorage.removeItem('banco-horas-registros');
-                    localStorage.removeItem('banco-horas-registros-offline');
-                    localStorage.removeItem('registrosBancoHoras'); // Chave antiga
-                    localStorage.removeItem('backup_registros_antigos');
-                    console.log('✅ localStorage limpo');
-                } catch (error) {
-                    console.warn('⚠️ Erro ao limpar localStorage:', error.message);
-                }
-                
-                // 3. Limpar sessionStorage
-                try {
-                    sessionStorage.clear();
-                    console.log('✅ sessionStorage limpo');
-                } catch (error) {
-                    console.warn('⚠️ Erro ao limpar sessionStorage:', error.message);
-                }
-                
-                // 4. Resetar configurações
+                await this.storage.limparRegistros();
                 this.configuracao.resetarConfiguracao();
-                
-                // 5. Limpar array local
-                this.registroPlantao.registros = [];
-                
-                // 6. Recarregar dados (deve estar vazio agora)
                 await this.registroPlantao.carregarRegistros();
                 await this.atualizarTotais();
-                
-                this.mostrarNotificacao('✅ Todos os dados foram resetados com sucesso!', 'success');
-                console.log('🧹 Reset completo realizado');
-                
+                this.mostrarNotificacao('✅ Dados resetados com sucesso!', 'success');
             } catch (error) {
                 console.error('❌ Erro ao resetar dados:', error);
                 this.mostrarNotificacao('Erro ao resetar dados: ' + error.message, 'error');

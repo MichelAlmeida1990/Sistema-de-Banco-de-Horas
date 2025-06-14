@@ -87,12 +87,6 @@ function isDomainAuthorized() {
         fullUrl: fullUrl
     });
     
-    // ✅ VERIFICAÇÃO ESPECIAL PARA GITHUB PAGES
-    if (currentDomain === 'michelameida1990.github.io') {
-        console.log('✅ GitHub Pages detectado - Domínio já configurado no Firebase');
-        return true;
-    }
-    
     // ✅ SEMPRE AUTORIZAR DESENVOLVIMENTO LOCAL
     const isLocalDevelopment = 
         currentDomain === 'localhost' ||
@@ -135,8 +129,7 @@ function isDomainAuthorized() {
         'surge.sh',
         'herokuapp.com',
         'ngrok.io',
-        'ngrok.app',
-        'michelameida1990.github.io'  // Domínio específico já configurado
+        'ngrok.app'
     ];
     
     const isHostingService = hostingServices.some(service => 

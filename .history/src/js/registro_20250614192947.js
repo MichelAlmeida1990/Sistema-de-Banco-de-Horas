@@ -47,6 +47,11 @@ class RegistroPlantao {
                 } catch (error) {
                     console.error('❌ Erro ao salvar:', error);
                     this.mostrarErro(error.message);
+
+                    // Se erro de autenticação, redirecionar para login
+                    if (error.message.includes('autenticado')) {
+                        window.location.reload();
+                    }
                 } finally {
                     const btnRegistrar = document.getElementById('btnRegistrar');
                     if (btnRegistrar) {

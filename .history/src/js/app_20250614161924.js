@@ -8,17 +8,7 @@ class BancoHorasApp {
 
         // Inicializar componentes
         this.uid = uid;
-        
-        // Escolher storage baseado na disponibilidade do Firebase
-        const isOnline = window.auth?.currentUser;
-        if (isOnline) {
-            this.storage = new Storage(uid);
-            console.log('💾 Usando Firebase Storage');
-        } else {
-            this.storage = new StorageOffline(uid);
-            console.log('📱 Usando Storage Offline');
-        }
-        
+        this.storage = new Storage(uid);
         this.calculadora = new Calculadora();
         this.configuracao = new ConfiguracaoFinanceira();
         this.registroPlantao = new RegistroPlantao(this.configuracao, this.storage);

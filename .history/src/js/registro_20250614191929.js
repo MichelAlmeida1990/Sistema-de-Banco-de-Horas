@@ -47,6 +47,11 @@ class RegistroPlantao {
                 } catch (error) {
                     console.error('❌ Erro ao salvar:', error);
                     this.mostrarErro(error.message);
+
+                    // Se erro de autenticação, redirecionar para login
+                    if (error.message.includes('autenticado')) {
+                        window.location.reload();
+                    }
                 } finally {
                     const btnRegistrar = document.getElementById('btnRegistrar');
                     if (btnRegistrar) {
@@ -86,6 +91,11 @@ class RegistroPlantao {
 
     async salvarRegistro() {
         try {
+            // Verificar autenticação novamente
+            if (!window.auth.currentUser) {
+                throw new Error('Usuário não está autenticado. Por favor, faça login novamente.');
+            }
+
             console.log('📝 Iniciando salvamento de registro...');
             
             // 1. Coletar dados do formulário
@@ -121,18 +131,8 @@ class RegistroPlantao {
             console.log('💰 Valor hora base usado:', valorHoraBase);
             console.log('📊 Registro criado:', registro);
 
-            // 5. Salvar no storage (se online) ou apenas localmente (se offline)
-            const isOnline = window.auth?.currentUser;
-            if (isOnline) {
-                try {
-                    await this.storage.salvarRegistro(registro);
-                    console.log('✅ Registro salvo no Firebase');
-                } catch (error) {
-                    console.warn('⚠️ Erro ao salvar no Firebase, salvando apenas localmente:', error.message);
-                }
-            } else {
-                console.log('📱 Modo offline - salvando apenas localmente');
-            }
+            // 5. Salvar no storage
+            await this.storage.salvarRegistro(registro);
             
             // 6. Atualizar lista local
             if (this.registroEditando) {

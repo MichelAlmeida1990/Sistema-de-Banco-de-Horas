@@ -87,12 +87,6 @@ function isDomainAuthorized() {
         fullUrl: fullUrl
     });
     
-    // ✅ VERIFICAÇÃO ESPECIAL PARA GITHUB PAGES
-    if (currentDomain === 'michelameida1990.github.io') {
-        console.log('✅ GitHub Pages detectado - Domínio já configurado no Firebase');
-        return true;
-    }
-    
     // ✅ SEMPRE AUTORIZAR DESENVOLVIMENTO LOCAL
     const isLocalDevelopment = 
         currentDomain === 'localhost' ||
@@ -111,11 +105,10 @@ function isDomainAuthorized() {
         return true;
     }
     
-    // ✅ DOMÍNIOS OFICIAIS DO FIREBASE E GITHUB PAGES
+    // ✅ DOMÍNIOS OFICIAIS DO FIREBASE
     const firebaseDomains = [
         'banco-de-horas-596ca.firebaseapp.com',
-        'banco-de-horas-596ca.web.app',
-        'michelameida1990.github.io'
+        'banco-de-horas-596ca.web.app'
     ];
     
     const isFirebaseDomain = firebaseDomains.some(domain => 
@@ -135,8 +128,7 @@ function isDomainAuthorized() {
         'surge.sh',
         'herokuapp.com',
         'ngrok.io',
-        'ngrok.app',
-        'michelameida1990.github.io'  // Domínio específico já configurado
+        'ngrok.app'
     ];
     
     const isHostingService = hostingServices.some(service => 

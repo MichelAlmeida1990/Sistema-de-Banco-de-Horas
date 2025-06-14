@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste jsPDF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste jsPDF</h1>
+        <p>Esta página testa se o jsPDF está funcionando corretamente.</p>
+        
+        <div id="status" class="status info">
+            Verificando jsPDF...
+        </div>
+        
+        <button onclick="testarPDF()">📄 Gerar PDF de Teste</button>
+        <button onclick="voltarSistema()">🔙 Voltar ao Sistema</button>
+        
+        <div id="log" style="margin-top: 20px; font-family: monospace; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+            <strong>Log:</strong><br>
+        </div>
+    </div>
+
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script>
+        const statusEl = document.getElementById('status');
+        const logEl = document.getElementById('log');
+        
+        function log(message) {
+            logEl.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+            console.log(message);
+        }
+        
+        // Verificar jsPDF ao carregar
+        window.addEventListener('load', function() {
+            log('Página carregada');
+            
+            // Verificar diferentes formas de acessar jsPDF
+            log('window.jspdf: ' + typeof window.jspdf);
+            log('window.jsPDF: ' + typeof window.jsPDF);
+            log('window.jspdf?.jsPDF: ' + typeof window.jspdf?.jsPDF);
+            
+            // Configurar compatibilidade
+            if (window.jspdf && window.jspdf.jsPDF) {
+                window.jsPDF = window.jspdf.jsPDF;
+                log('✅ jsPDF configurado via window.jspdf.jsPDF');
+            }
+            
+            if (typeof window.jsPDF !== 'undefined') {
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ jsPDF carregado com sucesso!';
+                log('✅ jsPDF disponível');
+            } else {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ jsPDF não foi carregado';
+                log('❌ jsPDF não disponível');
+            }
+        });
+        
+        function testarPDF() {
+            try {
+                log('Iniciando teste de PDF...');
+                
+                // Verificar se jsPDF está disponível
+                if (typeof window.jsPDF === 'undefined') {
+                    throw new Error('jsPDF não está disponível');
+                }
+                
+                log('Criando documento PDF...');
+                const doc = new window.jsPDF();
+                
+                log('Adicionando conteúdo...');
+                doc.setFontSize(20);
+                doc.text('🧪 Teste jsPDF', 20, 30);
+                
+                doc.setFontSize(12);
+                doc.text('Este é um teste do jsPDF para o Sistema Banco de Horas', 20, 50);
+                doc.text('Data: ' + new Date().toLocaleString('pt-BR'), 20, 70);
+                doc.text('Status: Funcionando perfeitamente! ✅', 20, 90);
+                
+                log('Salvando PDF...');
+                doc.save('teste-jspdf.pdf');
+                
+                log('✅ PDF gerado com sucesso!');
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ PDF gerado com sucesso! Verifique o download.';
+                
+            } catch (error) {
+                log('❌ Erro: ' + error.message);
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Erro ao gerar PDF: ' + error.message;
+            }
+        }
+        
+        function voltarSistema() {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html> 

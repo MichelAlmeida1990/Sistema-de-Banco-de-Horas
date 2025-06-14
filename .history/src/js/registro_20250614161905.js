@@ -32,6 +32,11 @@ class RegistroPlantao {
                 e.stopPropagation(); // Prevenir propagação do evento
                 
                 try {
+                    // Verificar autenticação
+                    if (!window.auth.currentUser) {
+                        throw new Error('Usuário não está autenticado. Por favor, faça login novamente.');
+                    }
+
                     const btnRegistrar = document.getElementById('btnRegistrar');
                     if (btnRegistrar) {
                         btnRegistrar.disabled = true;
@@ -47,6 +52,11 @@ class RegistroPlantao {
                 } catch (error) {
                     console.error('❌ Erro ao salvar:', error);
                     this.mostrarErro(error.message);
+
+                    // Se erro de autenticação, redirecionar para login
+                    if (error.message.includes('autenticado')) {
+                        window.location.reload();
+                    }
                 } finally {
                     const btnRegistrar = document.getElementById('btnRegistrar');
                     if (btnRegistrar) {
@@ -86,6 +96,11 @@ class RegistroPlantao {
 
     async salvarRegistro() {
         try {
+            // Verificar autenticação novamente
+            if (!window.auth.currentUser) {
+                throw new Error('Usuário não está autenticado. Por favor, faça login novamente.');
+            }
+
             console.log('📝 Iniciando salvamento de registro...');
             
             // 1. Coletar dados do formulário
@@ -102,10 +117,9 @@ class RegistroPlantao {
             this.validarHorarios(dados.entrada, dados.saida);
 
             // 4. Criar registro com valor BASE - a calculadora aplicará os bônus
-            const uid = window.auth?.currentUser?.uid || 'offline-user-' + Date.now();
             const registro = {
                 id: this.registroEditando ? this.registroEditando.id : Date.now().toString(),
-                uid: uid,
+                uid: window.auth.currentUser.uid,
                 data: dados.data,
                 entrada: dados.entrada,
                 saida: dados.saida,
@@ -121,18 +135,8 @@ class RegistroPlantao {
             console.log('💰 Valor hora base usado:', valorHoraBase);
             console.log('📊 Registro criado:', registro);
 
-            // 5. Salvar no storage (se online) ou apenas localmente (se offline)
-            const isOnline = window.auth?.currentUser;
-            if (isOnline) {
-                try {
-                    await this.storage.salvarRegistro(registro);
-                    console.log('✅ Registro salvo no Firebase');
-                } catch (error) {
-                    console.warn('⚠️ Erro ao salvar no Firebase, salvando apenas localmente:', error.message);
-                }
-            } else {
-                console.log('📱 Modo offline - salvando apenas localmente');
-            }
+            // 5. Salvar no storage
+            await this.storage.salvarRegistro(registro);
             
             // 6. Atualizar lista local
             if (this.registroEditando) {
@@ -142,10 +146,7 @@ class RegistroPlantao {
                 this.registros.push(registro);
             }
 
-            // 7. Salvar também no localStorage (backup offline)
-            this.salvarRegistrosOffline();
-
-            // 8. Atualizar interface
+            // 7. Atualizar interface
             this.limparFormulario();
             this.renderizarRegistros();
             this.mostrarSucesso('✅ Registro salvo com sucesso!');
@@ -203,9 +204,7 @@ class RegistroPlantao {
             
             // Verificar autenticação
             if (!window.auth.currentUser) {
-                console.log('⚠️ Usuário não autenticado, tentando modo offline...');
-                this.carregarRegistrosOffline();
-                return;
+                throw new Error('Usuário não está autenticado');
             }
 
             // Carregar registros do storage
@@ -217,65 +216,23 @@ class RegistroPlantao {
             // Atualizar interface
             this.renderizarRegistros();
             
-            console.log(`✅ ${this.registros.length} registros carregados do Firebase`);
+            console.log(`✅ ${this.registros.length} registros carregados`);
             
         } catch (error) {
-            console.error('❌ Erro ao carregar registros do Firebase:', error);
+            console.error('❌ Erro ao carregar registros:', error);
             
-            // Fallback para modo offline
-            console.log('🔄 Tentando carregar registros do modo offline...');
-            this.carregarRegistrosOffline();
-        }
-    }
-
-    carregarRegistrosOffline() {
-        try {
-            // Tentar carregar do localStorage
-            const chaves = [
-                'banco-horas-registros-offline',
-                'banco-horas-registros',
-                'registrosBancoHoras'
-            ];
-            
-            let registrosOffline = [];
-            
-            for (const chave of chaves) {
-                const dados = localStorage.getItem(chave);
-                if (dados) {
-                    try {
-                        const registrosParsed = JSON.parse(dados);
-                        if (Array.isArray(registrosParsed) && registrosParsed.length > 0) {
-                            registrosOffline = registrosParsed;
-                            console.log(`📱 ${registrosOffline.length} registros carregados do localStorage (${chave})`);
-                            break;
-                        }
-                    } catch (parseError) {
-                        console.warn(`⚠️ Erro ao parsear dados de ${chave}:`, parseError);
-                    }
-                }
+            // Tratar erros específicos
+            if (error.message.includes('autenticado')) {
+                this.mostrarErro('Sessão expirada. Por favor, faça login novamente.');
+                return;
             }
             
-            this.registros = registrosOffline;
-            this.renderizarRegistros();
-            
-            if (registrosOffline.length === 0) {
-                console.log('📝 Nenhum registro encontrado (modo offline)');
+            if (error.message.includes('permissão')) {
+                this.mostrarErro('Sem permissão para acessar registros. Por favor, faça login novamente.');
+                return;
             }
             
-        } catch (error) {
-            console.error('❌ Erro ao carregar registros offline:', error);
-            this.registros = [];
-            this.renderizarRegistros();
-        }
-    }
-
-    salvarRegistrosOffline() {
-        try {
-            const dadosParaSalvar = JSON.stringify(this.registros);
-            localStorage.setItem('banco-horas-registros-offline', dadosParaSalvar);
-            console.log('💾 Registros salvos no localStorage (backup)');
-        } catch (error) {
-            console.warn('⚠️ Erro ao salvar registros offline:', error);
+            this.mostrarErro(`Erro ao carregar registros: ${error.message}`);
         }
     }
 
@@ -550,27 +507,13 @@ class RegistroPlantao {
 
         if (confirm('❓ Tem certeza que deseja excluir este plantão? Esta ação não pode ser desfeita.')) {
             try {
-                // 1. Tentar remover do Firebase
-                try {
-                    await this.storage.removerRegistro(id);
-                    console.log('✅ Registro removido do Firebase');
-                } catch (error) {
-                    console.warn('⚠️ Erro ao remover do Firebase (pode estar offline):', error.message);
-                }
-                
-                // 2. Remover da lista local
+                await this.storage.removerRegistro(id);
                 this.registros = this.registros.filter(r => r.id !== id);
-                
-                // 3. Atualizar localStorage
-                this.salvarRegistrosOffline();
-                
-                // 4. Atualizar interface
                 this.renderizarRegistros();
                 this.mostrarSucesso('✅ Plantão excluído com sucesso!');
-                
             } catch (error) {
                 console.error('❌ Erro ao excluir registro:', error);
-                this.mostrarErro('Erro ao excluir registro: ' + error.message);
+                this.mostrarErro('Erro ao excluir registro');
             }
         }
     }

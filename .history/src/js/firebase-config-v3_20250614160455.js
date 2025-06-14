@@ -78,96 +78,74 @@ function isDomainAuthorized() {
     const currentDomain = window.location.hostname;
     const currentPort = window.location.port;
     const currentProtocol = window.location.protocol;
-    const fullUrl = window.location.href;
     
-    console.log('🔍 Verificando domínio:', {
-        hostname: currentDomain,
-        port: currentPort,
-        protocol: currentProtocol,
-        fullUrl: fullUrl
-    });
+    // ✅ DOMÍNIOS SEMPRE AUTORIZADOS
+    const alwaysAuthorized = [
+        // Localhost em todas as variações
+        'localhost',
+        '127.0.0.1',
+        '0.0.0.0',
+        // Firebase oficial
+        'banco-de-horas-596ca.firebaseapp.com',
+        'banco-de-horas-596ca.web.app',
+        // Netlify, Vercel, GitHub Pages (caso use no futuro)
+        'netlify.app',
+        'vercel.app',
+        'github.io',
+        'surge.sh',
+        'herokuapp.com'
+    ];
     
-    // ✅ VERIFICAÇÃO ESPECIAL PARA GITHUB PAGES
-    if (currentDomain === 'michelameida1990.github.io') {
-        console.log('✅ GitHub Pages detectado - Domínio já configurado no Firebase');
+    // ✅ VERIFICAR DOMÍNIOS ESPECÍFICOS
+    const isSpecificDomain = alwaysAuthorized.some(domain => 
+        currentDomain === domain || 
+        currentDomain.endsWith('.' + domain) ||
+        currentDomain.includes(domain)
+    );
+    
+    if (isSpecificDomain) {
+        console.log('✅ Domínio autorizado:', currentDomain);
         return true;
     }
     
-    // ✅ SEMPRE AUTORIZAR DESENVOLVIMENTO LOCAL
-    const isLocalDevelopment = 
+    // ✅ VERIFICAR PADRÕES DE DESENVOLVIMENTO
+    const isDevelopment = 
         currentDomain === 'localhost' ||
         currentDomain === '127.0.0.1' ||
         currentDomain === '0.0.0.0' ||
-        currentDomain.startsWith('192.168.') ||
-        currentDomain.startsWith('10.') ||
-        currentDomain.startsWith('172.') ||
-        currentProtocol === 'file:' ||
-        currentPort !== '' ||  // Qualquer porta indica desenvolvimento
-        fullUrl.includes('localhost') ||
-        fullUrl.includes('127.0.0.1');
+        currentDomain.startsWith('192.168.') ||  // Rede local
+        currentDomain.startsWith('10.') ||       // Rede local
+        currentDomain.startsWith('172.') ||      // Rede local
+        currentDomain.includes('.local') ||      // mDNS
+        currentProtocol === 'file:' ||           // Arquivo local
+        currentPort !== '' ||                    // Qualquer porta = desenvolvimento
+        currentDomain.includes('ngrok') ||       // Túnel ngrok
+        currentDomain.includes('tunnel');        // Outros túneis
     
-    if (isLocalDevelopment) {
-        console.log('✅ DESENVOLVIMENTO LOCAL - Domínio autorizado automaticamente:', currentDomain + ':' + currentPort);
+    if (isDevelopment) {
+        console.log('🔧 Ambiente de desenvolvimento detectado:', currentDomain + ':' + currentPort);
         return true;
     }
     
-    // ✅ DOMÍNIOS OFICIAIS DO FIREBASE E GITHUB PAGES
-    const firebaseDomains = [
-        'banco-de-horas-596ca.firebaseapp.com',
-        'banco-de-horas-596ca.web.app',
-        'michelameida1990.github.io'
-    ];
-    
-    const isFirebaseDomain = firebaseDomains.some(domain => 
-        currentDomain === domain || currentDomain.endsWith('.' + domain)
-    );
-    
-    if (isFirebaseDomain) {
-        console.log('✅ Domínio oficial Firebase:', currentDomain);
-        return true;
-    }
-    
-    // ✅ OUTROS SERVIÇOS DE HOSPEDAGEM
-    const hostingServices = [
-        'netlify.app',
-        'vercel.app', 
-        'github.io',
-        'surge.sh',
-        'herokuapp.com',
-        'ngrok.io',
-        'ngrok.app',
-        'michelameida1990.github.io'  // Domínio específico já configurado
-    ];
-    
-    const isHostingService = hostingServices.some(service => 
-        currentDomain.includes(service)
-    );
-    
-    if (isHostingService) {
-        console.log('✅ Serviço de hospedagem reconhecido:', currentDomain);
-        return true;
-    }
-    
-    // ✅ VERIFICAR IPs DE REDE LOCAL (MÓVEIS/TABLETS)
+    // ✅ VERIFICAR IPs LOCAIS E MÓVEIS
     const isLocalIP = 
-        /^192\.168\.\d{1,3}\.\d{1,3}$/.test(currentDomain) ||
-        /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(currentDomain) ||
-        /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(currentDomain);
+        /^192\.168\.\d{1,3}\.\d{1,3}$/.test(currentDomain) ||  // 192.168.x.x
+        /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(currentDomain) || // 10.x.x.x
+        /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(currentDomain); // 172.16-31.x.x
     
     if (isLocalIP) {
-        console.log('✅ IP de rede local (móvel/tablet):', currentDomain);
+        console.log('📱 IP de rede local detectado:', currentDomain);
         return true;
     }
     
-    // ✅ MODO PERMISSIVO: ACEITAR QUALQUER DOMÍNIO HTTPS
-    if (currentProtocol === 'https:') {
-        console.log('✅ Domínio HTTPS aceito:', currentDomain);
+    // ✅ PARA PRODUÇÃO: ACEITAR QUALQUER DOMÍNIO HTTPS
+    if (currentProtocol === 'https:' && !currentPort) {
+        console.log('🌐 Domínio HTTPS em produção:', currentDomain);
         return true;
     }
     
-    // ✅ ÚLTIMO RECURSO: ACEITAR TUDO EM DESENVOLVIMENTO
-    console.log('⚠️ Domínio não reconhecido, mas permitindo acesso:', currentDomain + ':' + currentPort);
-    return true; // SEMPRE PERMITIR - modo ultra permissivo
+    console.warn('⚠️ Domínio não reconhecido:', currentDomain + ':' + currentPort);
+    return false; // Só bloqueia se realmente não reconhecer
 }
 
 // ✅ EXPORTAR PARA USO GLOBAL

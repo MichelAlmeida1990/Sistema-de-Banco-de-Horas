@@ -519,7 +519,6 @@
     <!-- ✅ SCRIPTS -->
     <script src="src/js/firebase-config-v3.js?v=3.0.0"></script>
     <script src="src/js/storage.js"></script>
-    <script src="src/js/storage-offline.js"></script>
     <script src="src/js/calculadora.js"></script>
     <script src="src/js/configuracao.js"></script>
     <script src="src/js/registro.js"></script>
@@ -613,37 +612,10 @@
                     let mensagemErro = 'Erro ao fazer login. ';
                     
                     if (error.code === 'auth/unauthorized-domain') {
-                        const currentDomain = window.location.hostname;
-                        const currentPort = window.location.port;
-                        const isLocalhost = currentDomain === 'localhost' || currentDomain === '127.0.0.1';
-                        const isGitHubPages = currentDomain === 'michelameida1990.github.io';
-                        
-                        if (isGitHubPages) {
-                            mensagemErro = `🔄 Problema temporário no GitHub Pages!\n\n` +
-                                         `O domínio está configurado no Firebase, mas pode haver:\n\n` +
-                                         `• Cache do navegador desatualizado\n` +
-                                         `• Propagação DNS em andamento\n` +
-                                         `• Problema temporário do Firebase\n\n` +
-                                         `Soluções:\n` +
-                                         `1. Aguarde 5-10 minutos\n` +
-                                         `2. Limpe cache (Ctrl+Shift+Delete)\n` +
-                                         `3. Use "Modo Offline" (100% funcional)\n\n` +
-                                         `💡 O modo offline tem todos os recursos!`;
-                        } else if (isLocalhost) {
-                            mensagemErro = `🔧 Configuração Firebase Necessária!\n\n` +
-                                         `Para usar login Google em desenvolvimento local:\n\n` +
-                                         `1. Acesse: Firebase Console > Authentication > Settings\n` +
-                                         `2. Em "Authorized domains", adicione:\n` +
-                                         `   • localhost\n` +
-                                         `   • 127.0.0.1\n\n` +
-                                         `3. Ou use "Modo Offline" (funciona imediatamente)\n\n` +
-                                         `💡 O sistema funciona perfeitamente offline!`;
-                        } else {
-                            mensagemErro = `🚫 Domínio não autorizado!\n\n` +
-                                         `Para usar o login Google, adicione este domínio no Firebase Console:\n` +
-                                         `• ${currentDomain}${currentPort ? ':' + currentPort : ''}\n\n` +
-                                         `Ou use o "Modo Offline" para continuar.`;
-                        }
+                        mensagemErro = `🚫 Domínio não autorizado!\n\n` +
+                                     `Para usar o login Google, adicione este domínio no Firebase Console:\n` +
+                                     `• ${window.location.hostname}:${window.location.port}\n\n` +
+                                     `Ou use o "Modo Offline" para continuar.`;
                     } else if (error.code === 'auth/operation-not-allowed') {
                         mensagemErro = `🔧 Provedor Google não habilitado!\n\n` +
                                      `Configure no Firebase Console:\n` +
@@ -659,14 +631,13 @@
                     } else if (error.message.includes('Firebase não está disponível')) {
                         mensagemErro = 'Firebase não disponível. Use o "Modo Offline".';
                     } else if (error.message.includes('Domínio não autorizado')) {
-                        // Se chegou aqui, provavelmente é um erro temporário do Firebase
-                        mensagemErro = `⚠️ Erro temporário de autenticação!\n\n` +
-                                     `O domínio parece estar configurado, mas o Firebase está com problema.\n\n` +
-                                     `Soluções:\n` +
-                                     `1. Aguarde alguns minutos e tente novamente\n` +
-                                     `2. Limpe o cache do navegador (Ctrl+Shift+Delete)\n` +
-                                     `3. Use "Modo Offline" (funciona imediatamente)\n\n` +
-                                     `💡 O modo offline tem todos os recursos!`;
+                        mensagemErro = `🔧 Configure o Firebase Console:\n\n` +
+                                     `1. Acesse: Firebase Console > Authentication > Settings\n` +
+                                     `2. Adicione em "Authorized domains":\n` +
+                                     `   • ${window.location.hostname}\n` +
+                                     `   • 127.0.0.1\n` +
+                                     `   • localhost\n\n` +
+                                     `Ou use o "Modo Offline" enquanto isso.`;
                     } else {
                         mensagemErro += error.message;
                     }
