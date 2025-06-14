@@ -1,14 +1,15 @@
 // src/js/firebase-config.js - Configuração Firebase v2.1.0
 
-// ✅ CONFIGURAÇÃO FIREBASE - CONFIGURAÇÃO CORRETA
+// ✅ CONFIGURAÇÃO FIREBASE - DADOS SENSÍVEIS REMOVIDOS
+// Para usar em produção, configure as variáveis de ambiente
 const firebaseConfig = {
-    apiKey: "AIzaSyAsYDPDgw1GO_yOB6prCxvxDfwI3kEfhvE",
-    authDomain: "banco-de-horas-596ca.firebaseapp.com",
-    projectId: "banco-de-horas-596ca",
-    storageBucket: "banco-de-horas-596ca.firebasestorage.app",
-    messagingSenderId: "75423178670",
-    appId: "1:75423178670:web:b62ce90d78292f8485f23f",
-    measurementId: "G-9RBTXPJ3PQ"
+    apiKey: "YOUR_API_KEY_HERE",
+    authDomain: "your-project.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project.appspot.com",
+    messagingSenderId: "123456789012",
+    appId: "1:123456789012:web:abcdef123456789012345678",
+    measurementId: "G-XXXXXXXXXX"
 };
 
 // ✅ DETECTAR AMBIENTE DE DESENVOLVIMENTO
@@ -17,8 +18,18 @@ const isDevelopment = window.location.hostname === 'localhost' ||
                      window.location.hostname.includes('localhost') ||
                      window.location.port !== '';
 
+// ✅ CONFIGURAÇÃO PARA DESENVOLVIMENTO LOCAL
 if (isDevelopment) {
     console.log('🔧 Modo desenvolvimento detectado:', window.location.hostname);
+    
+    // Configuração para desenvolvimento local
+    firebaseConfig.apiKey = "AIzaSyAsYDPDgw1GO_yOB6prCxvxDfwI3kEfhvE";
+    firebaseConfig.authDomain = "banco-de-horas-596ca.firebaseapp.com";
+    firebaseConfig.projectId = "banco-de-horas-596ca";
+    firebaseConfig.storageBucket = "banco-de-horas-596ca.firebasestorage.app";
+    firebaseConfig.messagingSenderId = "75423178670";
+    firebaseConfig.appId = "1:75423178670:web:b62ce90d78292f8485f23f";
+    firebaseConfig.measurementId = "G-9RBTXPJ3PQ";
 }
 
 // ✅ INICIALIZAR FIREBASE COM TRATAMENTO DE ERRO

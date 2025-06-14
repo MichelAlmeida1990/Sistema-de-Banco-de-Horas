@@ -510,7 +510,7 @@
     </div>
 
     <!-- ✅ SCRIPTS -->
-    <script src="src/js/firebase-config-v3.js?v=3.0.0"></script>
+    <script src="src/js/firebase-config.js"></script>
     <script src="src/js/storage.js"></script>
     <script src="src/js/calculadora.js"></script>
     <script src="src/js/configuracao.js"></script>
@@ -564,21 +564,6 @@
                     appContainer.style.display = 'none';
                 }
             });
-            } else {
-                // Firebase não disponível - mostrar apenas tela de login
-                console.log('🔄 Firebase não disponível - modo offline apenas');
-                document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('loginScreen').style.display = 'flex';
-                document.getElementById('appContainer').style.display = 'none';
-                
-                // Desabilitar botão do Google e mostrar aviso
-                const loginBtn = document.getElementById('loginBtn');
-                if (loginBtn) {
-                    loginBtn.disabled = true;
-                    loginBtn.innerHTML = '<i class="fas fa-exclamation-triangle text-xl"></i> Firebase Indisponível';
-                    loginBtn.title = 'Configure o Firebase ou use o modo offline';
-                }
-            }
 
             // ✅ LOGIN COM GOOGLE
             document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -609,14 +594,6 @@
                                      `Para usar o login Google, adicione este domínio no Firebase Console:\n` +
                                      `• ${window.location.hostname}:${window.location.port}\n\n` +
                                      `Ou use o "Modo Offline" para continuar.`;
-                    } else if (error.code === 'auth/operation-not-allowed') {
-                        mensagemErro = `🔧 Provedor Google não habilitado!\n\n` +
-                                     `Configure no Firebase Console:\n` +
-                                     `1. Acesse: Authentication > Sign-in method\n` +
-                                     `2. Clique em "Google"\n` +
-                                     `3. Ative o provedor\n` +
-                                     `4. Configure email de suporte\n\n` +
-                                     `Ou use o "Modo Offline" enquanto configura.`;
                     } else if (error.code === 'auth/popup-closed-by-user') {
                         mensagemErro = 'Login cancelado pelo usuário.';
                     } else if (error.code === 'auth/popup-blocked') {

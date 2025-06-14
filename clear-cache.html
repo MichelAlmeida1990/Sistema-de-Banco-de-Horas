@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpando Cache - Sistema Banco de Horas</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .progress {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            width: 0%;
+            animation: progress 3s ease-in-out forwards;
+        }
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Atualizando Sistema</h1>
+        <div class="spinner"></div>
+        <p>Limpando cache e carregando configurações atualizadas...</p>
+        <div class="progress">
+            <div class="progress-bar"></div>
+        </div>
+        <p id="status">Preparando...</p>
+    </div>
+
+    <script>
+        // Limpar todos os caches possíveis
+        function clearAllCaches() {
+            // 1. Limpar localStorage
+            localStorage.clear();
+            
+            // 2. Limpar sessionStorage
+            sessionStorage.clear();
+            
+            // 3. Limpar cache do service worker (se existir)
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                    }
+                });
+            }
+            
+            // 4. Limpar cache da API
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    for (let name of names) {
+                        caches.delete(name);
+                    }
+                });
+            }
+            
+            console.log('✅ Todos os caches limpos');
+        }
+
+        // Atualizar status
+        const statusEl = document.getElementById('status');
+        const messages = [
+            'Limpando localStorage...',
+            'Removendo cache do navegador...',
+            'Atualizando configurações Firebase...',
+            'Preparando sistema atualizado...',
+            'Redirecionando...'
+        ];
+
+        let currentMessage = 0;
+        const updateStatus = () => {
+            if (currentMessage < messages.length) {
+                statusEl.textContent = messages[currentMessage];
+                currentMessage++;
+                setTimeout(updateStatus, 600);
+            }
+        };
+
+        // Executar limpeza
+        setTimeout(() => {
+            clearAllCaches();
+            updateStatus();
+            
+            // Redirecionar após 3 segundos
+            setTimeout(() => {
+                window.location.href = '/index.html?cache_cleared=' + Date.now();
+            }, 3000);
+        }, 500);
+    </script>
+</body>
+</html> 

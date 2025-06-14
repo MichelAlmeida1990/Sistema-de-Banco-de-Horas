@@ -232,9 +232,7 @@ class ExportadorDados {
     adicionarResumoPDF(doc, yInicial, registros) {
         try {
             let y = yInicial;
-            // Usar valor padrão se não houver configuração
-            const valorHoraPadrao = registros.length > 0 ? (registros[0].valorHora || 25.00) : 25.00;
-            const totais = this.calculadora.calcularTotais(registros, valorHoraPadrao);
+            const totais = this.calculadora.calcularTotais(registros);
             
             // Título da seção
             doc.setFontSize(14);
@@ -264,7 +262,7 @@ class ExportadorDados {
             // Linha 2
             doc.setFontSize(12);
             doc.setTextColor(0, 150, 0);
-            doc.text(`Valor Total: ${this.formatarMoedaSimples(totais.totalValorGeral)}`, coluna1X, y + 15);
+            doc.text(`Valor Total: ${this.calculadora.formatarMoeda(totais.totalValorGeral)}`, coluna1X, y + 15);
             
             return y + 30;
             
@@ -327,8 +325,7 @@ class ExportadorDados {
                 }
                 
                 // Calcular valores do registro
-                const valorHora = registro.valorHora || 25.00; // Valor padrão se não definido
-                const calculo = this.calculadora.calcularValorRegistro(registro, valorHora);
+                const calculo = this.calculadora.calcularValorRegistro(registro, registro.valorHora);
                 const tipoPlantao = this.obterTipoTexto(registro);
                 
                 // Dados

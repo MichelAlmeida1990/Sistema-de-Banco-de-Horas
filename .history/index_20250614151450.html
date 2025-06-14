@@ -510,7 +510,7 @@
     </div>
 
     <!-- ✅ SCRIPTS -->
-    <script src="src/js/firebase-config-v3.js?v=3.0.0"></script>
+    <script src="src/js/firebase-config.js"></script>
     <script src="src/js/storage.js"></script>
     <script src="src/js/calculadora.js"></script>
     <script src="src/js/configuracao.js"></script>
@@ -523,14 +523,15 @@
 
         // ✅ AGUARDAR CARREGAMENTO DO FIREBASE
         document.addEventListener('DOMContentLoaded', () => {
-            // Verificar se Firebase foi carregado (não obrigatório)
-            if (!window.firebaseInitialized) {
-                console.warn('⚠️ Firebase não inicializado - apenas modo offline disponível');
+            // Verificar se Firebase foi carregado
+            if (!window.auth) {
+                console.error('❌ Firebase não carregado');
+                alert('Erro ao carregar Firebase. Recarregue a página.');
+                return;
             }
 
             // ✅ GERENCIAMENTO DE AUTENTICAÇÃO
-            if (window.isFirebaseAvailable()) {
-                window.auth.onAuthStateChanged(async (user) => {
+                        window.auth.onAuthStateChanged(async (user) => {
                 const loadingScreen = document.getElementById('loadingScreen');
                 const loginScreen = document.getElementById('loginScreen');
                 const appContainer = document.getElementById('appContainer');
@@ -564,136 +565,23 @@
                     appContainer.style.display = 'none';
                 }
             });
-            } else {
-                // Firebase não disponível - mostrar apenas tela de login
-                console.log('🔄 Firebase não disponível - modo offline apenas');
-                document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('loginScreen').style.display = 'flex';
-                document.getElementById('appContainer').style.display = 'none';
-                
-                // Desabilitar botão do Google e mostrar aviso
-                const loginBtn = document.getElementById('loginBtn');
-                if (loginBtn) {
-                    loginBtn.disabled = true;
-                    loginBtn.innerHTML = '<i class="fas fa-exclamation-triangle text-xl"></i> Firebase Indisponível';
-                    loginBtn.title = 'Configure o Firebase ou use o modo offline';
-                }
-            }
 
             // ✅ LOGIN COM GOOGLE
             document.getElementById('loginBtn').addEventListener('click', async () => {
                 try {
-                    // Verificar se Firebase está disponível
-                    if (!window.isFirebaseAvailable()) {
-                        throw new Error('Firebase não está disponível. Use o modo offline.');
-                    }
-                    
-                    // Verificar se domínio está autorizado
-                    if (!window.isDomainAuthorized()) {
-                        throw new Error('Domínio não autorizado para OAuth. Configure no Firebase Console.');
-                    }
-                    
                     const provider = new firebase.auth.GoogleAuthProvider();
-                    provider.addScope('email');
-                    provider.addScope('profile');
-                    
                     await window.auth.signInWithPopup(provider);
-                    
                 } catch (error) {
                     console.error('❌ Erro no login:', error);
-                    
-                    let mensagemErro = 'Erro ao fazer login. ';
-                    
-                    if (error.code === 'auth/unauthorized-domain') {
-                        mensagemErro = `🚫 Domínio não autorizado!\n\n` +
-                                     `Para usar o login Google, adicione este domínio no Firebase Console:\n` +
-                                     `• ${window.location.hostname}:${window.location.port}\n\n` +
-                                     `Ou use o "Modo Offline" para continuar.`;
-                    } else if (error.code === 'auth/operation-not-allowed') {
-                        mensagemErro = `🔧 Provedor Google não habilitado!\n\n` +
-                                     `Configure no Firebase Console:\n` +
-                                     `1. Acesse: Authentication > Sign-in method\n` +
-                                     `2. Clique em "Google"\n` +
-                                     `3. Ative o provedor\n` +
-                                     `4. Configure email de suporte\n\n` +
-                                     `Ou use o "Modo Offline" enquanto configura.`;
-                    } else if (error.code === 'auth/popup-closed-by-user') {
-                        mensagemErro = 'Login cancelado pelo usuário.';
-                    } else if (error.code === 'auth/popup-blocked') {
-                        mensagemErro = 'Popup bloqueado pelo navegador. Permita popups para este site.';
-                    } else if (error.message.includes('Firebase não está disponível')) {
-                        mensagemErro = 'Firebase não disponível. Use o "Modo Offline".';
-                    } else if (error.message.includes('Domínio não autorizado')) {
-                        mensagemErro = `🔧 Configure o Firebase Console:\n\n` +
-                                     `1. Acesse: Firebase Console > Authentication > Settings\n` +
-                                     `2. Adicione em "Authorized domains":\n` +
-                                     `   • ${window.location.hostname}\n` +
-                                     `   • 127.0.0.1\n` +
-                                     `   • localhost\n\n` +
-                                     `Ou use o "Modo Offline" enquanto isso.`;
-                    } else {
-                        mensagemErro += error.message;
-                    }
-                    
-                    alert(mensagemErro);
+                    alert('Erro ao fazer login. Tente novamente.');
                 }
-            });
-
-            // ✅ MODO OFFLINE
-            document.getElementById('offlineBtn').addEventListener('click', async () => {
-                try {
-                    console.log('🔄 Iniciando modo offline...');
-                    
-                    // Simular usuário offline
-                    const offlineUser = {
-                        uid: 'offline-user-' + Date.now(),
-                        email: 'usuario.offline@local.com',
-                        displayName: 'Usuário Offline'
-                    };
-                    
-                    // Mostrar email do usuário
-                    document.getElementById('userEmail').textContent = offlineUser.email;
-                    
-                    // Inicializar aplicação em modo offline
-                    app = new BancoHorasApp(offlineUser.uid);
-                    
-                    // Mostrar aplicação
-                    document.getElementById('loadingScreen').style.display = 'none';
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('appContainer').style.display = 'block';
-                    
-                    // Mostrar notificação
-                    setTimeout(() => {
-                        if (app) {
-                            app.mostrarNotificacao('🔄 Modo offline ativado! Dados salvos localmente.', 'info');
-                        }
-                    }, 1000);
-                    
-                } catch (error) {
-                    console.error('❌ Erro no modo offline:', error);
-                    alert('Erro ao iniciar modo offline. Tente novamente.');
-                }
-            });
-
-            // ✅ SUPABASE (FUTURO)
-            document.getElementById('supabaseBtn').addEventListener('click', () => {
-                alert('🚧 Supabase em desenvolvimento! Em breve disponível como alternativa ao Firebase.');
             });
 
             // ✅ LOGOUT
             document.getElementById('logoutBtn').addEventListener('click', async () => {
                 if (confirm('Deseja realmente sair do sistema?')) {
                     try {
-                        // Verificar se é usuário offline
-                        const userEmail = document.getElementById('userEmail').textContent;
-                        
-                        if (userEmail.includes('offline')) {
-                            // Logout offline - apenas recarregar
-                            window.location.reload();
-                        } else {
-                            // Logout Firebase
-                            await window.auth.signOut();
-                        }
+                        await window.auth.signOut();
                     } catch (error) {
                         console.error('❌ Erro no logout:', error);
                         alert('Erro ao sair. Tente novamente.');

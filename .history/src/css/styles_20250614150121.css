@@ -366,12 +366,6 @@ button {
 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    transform: none !important;
-}
-
-button:disabled:hover {
-    transform: none !important;
-    box-shadow: none !important;
 }
 
 /* Inputs específicos */
@@ -431,6 +425,3 @@ th, td {
 
 /* Utilitários adicionais */
 .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-
-/* Espaçamento */
-.space-y-4 > * + * { margin-top: 1rem; }

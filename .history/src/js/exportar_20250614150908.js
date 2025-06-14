@@ -232,9 +232,7 @@ class ExportadorDados {
     adicionarResumoPDF(doc, yInicial, registros) {
         try {
             let y = yInicial;
-            // Usar valor padrão se não houver configuração
-            const valorHoraPadrao = registros.length > 0 ? (registros[0].valorHora || 25.00) : 25.00;
-            const totais = this.calculadora.calcularTotais(registros, valorHoraPadrao);
+            const totais = this.calculadora.calcularTotais(registros);
             
             // Título da seção
             doc.setFontSize(14);

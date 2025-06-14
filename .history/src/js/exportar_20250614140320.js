@@ -232,9 +232,7 @@ class ExportadorDados {
     adicionarResumoPDF(doc, yInicial, registros) {
         try {
             let y = yInicial;
-            // Usar valor padrão se não houver configuração
-            const valorHoraPadrao = registros.length > 0 ? (registros[0].valorHora || 25.00) : 25.00;
-            const totais = this.calculadora.calcularTotais(registros, valorHoraPadrao);
+            const totais = this.calculadora.calcularTotais(registros);
             
             // Título da seção
             doc.setFontSize(14);
@@ -264,7 +262,7 @@ class ExportadorDados {
             // Linha 2
             doc.setFontSize(12);
             doc.setTextColor(0, 150, 0);
-            doc.text(`Valor Total: ${this.formatarMoedaSimples(totais.totalValorGeral)}`, coluna1X, y + 15);
+            doc.text(`Valor Total: ${this.calculadora.formatarMoeda(totais.totalValorGeral)}`, coluna1X, y + 15);
             
             return y + 30;
             
@@ -326,21 +324,16 @@ class ExportadorDados {
                     doc.rect(15, y - 3, 270, 8, 'F');
                 }
                 
-                // Calcular valores do registro
-                const valorHora = registro.valorHora || 25.00; // Valor padrão se não definido
-                const calculo = this.calculadora.calcularValorRegistro(registro, valorHora);
-                const tipoPlantao = this.obterTipoTexto(registro);
-                
                 // Dados
                 doc.text(this.formatarDataBR(registro.data), 18, y + 2);
                 doc.text(registro.entrada || '', 40, y + 2);
                 doc.text(registro.saida || '', 60, y + 2);
-                doc.text(this.limparTipoPlantao(tipoPlantao), 80, y + 2);
-                doc.text(this.formatarHorasCSV(calculo.horasTrabalhadas), 110, y + 2);
-                doc.text(this.formatarHorasCSV(calculo.bancoHoras), 140, y + 2);
-                doc.text(this.formatarMoedaSimples(calculo.valorBase), 165, y + 2);
-                doc.text(this.formatarMoedaSimples(calculo.valorBonus), 225, y + 2);
-                doc.text(this.formatarMoedaSimples(calculo.valorTotal), 255, y + 2);
+                doc.text(this.limparTipoPlantao(registro.tipoPlantao || 'Normal'), 80, y + 2);
+                doc.text(this.formatarHorasCSV(registro.horasTrabalhadas), 110, y + 2);
+                doc.text(this.formatarHorasCSV(registro.saldoBanco), 140, y + 2);
+                doc.text(this.formatarMoedaSimples(registro.valorBase), 190, y + 2);
+                doc.text(this.formatarMoedaSimples(registro.valorBonus), 225, y + 2);
+                doc.text(this.formatarMoedaSimples(registro.valorTotal), 255, y + 2);
                 
                 y += 8;
             });

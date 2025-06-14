@@ -510,7 +510,7 @@
     </div>
 
     <!-- ✅ SCRIPTS -->
-    <script src="src/js/firebase-config-v3.js?v=3.0.0"></script>
+    <script src="src/js/firebase-config.js"></script>
     <script src="src/js/storage.js"></script>
     <script src="src/js/calculadora.js"></script>
     <script src="src/js/configuracao.js"></script>
@@ -609,14 +609,6 @@
                                      `Para usar o login Google, adicione este domínio no Firebase Console:\n` +
                                      `• ${window.location.hostname}:${window.location.port}\n\n` +
                                      `Ou use o "Modo Offline" para continuar.`;
-                    } else if (error.code === 'auth/operation-not-allowed') {
-                        mensagemErro = `🔧 Provedor Google não habilitado!\n\n` +
-                                     `Configure no Firebase Console:\n` +
-                                     `1. Acesse: Authentication > Sign-in method\n` +
-                                     `2. Clique em "Google"\n` +
-                                     `3. Ative o provedor\n` +
-                                     `4. Configure email de suporte\n\n` +
-                                     `Ou use o "Modo Offline" enquanto configura.`;
                     } else if (error.code === 'auth/popup-closed-by-user') {
                         mensagemErro = 'Login cancelado pelo usuário.';
                     } else if (error.code === 'auth/popup-blocked') {
